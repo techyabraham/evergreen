@@ -4,9 +4,8 @@ import Link from 'next/link';
 const links = [
   ['Rent', '/property-for-rent'],
   ['Buy', '/property-for-sale'],
-  ['Cars', '/cars'],
   ['Recently closed', '/recently-closed'],
-  ['Safety', '/safety'],
+  ['Vehicles', '/cars'],
   ['About', '/about'],
 ];
 
@@ -40,7 +39,7 @@ export function Header() {
           {links.map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}
         </nav>
       </details>
-      <Link className="nav-cta" href="/request">Tell us what you need <span aria-hidden="true">↗</span></Link>
+      <Link className="nav-cta" href="/request">Get matched <span aria-hidden="true">↗</span></Link>
     </header>
   );
 }

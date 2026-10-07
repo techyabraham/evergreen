@@ -7,7 +7,7 @@ const businessName = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Evergreen Global 
 
 export const metadata: Metadata = {
   title: { default: businessName, template: `%s · ${businessName}` },
-  description: 'Browse property and vehicle listings from Evergreen Global Properties. Ask the realtor about availability and details.',
+  description: 'Find homes to rent or buy in Ibadan with Evergreen Global Properties. Explore local property and speak with a team that knows the city.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
 };
 
