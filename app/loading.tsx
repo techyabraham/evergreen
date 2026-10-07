@@ -1,0 +1,1 @@
+export default function Loading(){return <section className="wrap text-page" aria-live="polite"><p className="eyebrow">Loading</p><h1>One moment.</h1><p className="muted">We’re fetching the latest listing information.</p></section>}

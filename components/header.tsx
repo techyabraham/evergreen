@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export function Header() { return <header className="site-header"><Link className="wordmark" href="/">{process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Property, thoughtfully.'}</Link><nav aria-label="Main navigation"><Link href="/properties">Properties</Link><Link href="/cars">Cars</Link><Link href="/about">About</Link><Link href="/contact">Contact</Link></nav><Link className="nav-cta" href="/contact">Talk to the realtor <span aria-hidden="true">↗</span></Link></header>; }

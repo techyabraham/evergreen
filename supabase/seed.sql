@@ -1,0 +1,1 @@
+-- Intentionally no sample inventory. Add only verified real listings in a development project.

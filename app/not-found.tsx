@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function NotFound(){return <section className="wrap text-page"><p className="eyebrow">Not found</p><h1>This listing is no longer available here.</h1><p>It may have been removed or updated. Browse the current collection or contact the realtor to ask about it.</p><p><Link className="button" href="/properties">Browse properties</Link></p><Link href="/cars">Browse cars</Link></section>}

@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({reset}:{error:Error&{digest?:string};reset:()=>void}){return <section className="wrap text-page"><p className="eyebrow">Something went wrong</p><h1>We couldn’t load that just now.</h1><p className="muted">Try again. Your enquiry details were not included in the error message.</p><button className="button" onClick={()=>reset()}>Try again</button></section>}
