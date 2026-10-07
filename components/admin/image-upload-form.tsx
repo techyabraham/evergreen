@@ -1,0 +1,21 @@
+'use client';
+import {useRef,useState,useTransition, type FormEvent} from 'react';
+import {uploadListingImages} from '@/app/actions';
+
+function toBlob(canvas:HTMLCanvasElement,type:string,quality:number){return new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('This browser could not encode the photo.')) ,type,quality));}
+async function encodeImage(file:File,maxEdge:number,quality:number){
+ const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});const ratio=Math.min(1,maxEdge/Math.max(bitmap.width,bitmap.height));let width=Math.max(1,Math.round(bitmap.width*ratio));let height=Math.max(1,Math.round(bitmap.height*ratio));const canvas=document.createElement('canvas');const context=canvas.getContext('2d');if(!context)throw new Error('Photo processing is unavailable in this browser.');let blob:Blob|undefined;let type='image/webp';
+ for(let resize=0;resize<4;resize++){canvas.width=width;canvas.height=height;context.drawImage(bitmap,0,0,width,height);for(const q of [quality,.68,.56,.44]){blob=await toBlob(canvas,'image/webp',q);type='image/webp';if(blob.type!=='image/webp'){blob=await toBlob(canvas,'image/jpeg',q);type='image/jpeg';}if(blob&&blob.size<=2*1024*1024)break;}if(blob&&blob.size<=2*1024*1024)break;width=Math.max(1,Math.round(width*.8));height=Math.max(1,Math.round(height*.8));}
+ bitmap.close();if(!blob||blob.size>2*1024*1024)throw new Error('This photo could not be compressed below 2 MB. Choose a smaller image.');return {blob,width,height,type};
+}
+export function ImageUploadForm({listingId}:{listingId:string}){
+ const input=useRef<HTMLInputElement>(null);const [busy,startTransition]=useTransition();const [message,setMessage]=useState('');
+ async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setMessage('');const form=event.currentTarget;const file=input.current?.files?.[0];const altText=String(new FormData(form).get('alt_text')||'').trim();
+  if(!file){setMessage('Choose a photo first.');return;}if(file.size>15*1024*1024){setMessage('The original photo must be 15 MB or smaller.');return;}if(!altText){setMessage('Describe what is visible in the photo.');return;}
+  try{const display=await encodeImage(file,1600,.8);const thumb=await encodeImage(file,480,.8);const blurCanvas=document.createElement('canvas');blurCanvas.width=10;blurCanvas.height=10;const blurContext=blurCanvas.getContext('2d');if(!blurContext)throw new Error('Photo processing is unavailable.');const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});blurContext.drawImage(bitmap,0,0,10,10);bitmap.close();const blur=blurCanvas.toDataURL('image/webp',.35);if(blur.length>2048)throw new Error('Could not create a small photo preview.');
+   const data=new FormData();data.set('id',listingId);data.set('alt_text',altText);data.set('display',new File([display.blob],`display.${display.type==='image/webp'?'webp':'jpg'}`,{type:display.type}));data.set('thumb',new File([thumb.blob],`thumb.${thumb.type==='image/webp'?'webp':'jpg'}`,{type:thumb.type}));data.set('width',String(display.width));data.set('height',String(display.height));data.set('blur_data_url',blur);
+   startTransition(async()=>{await uploadListingImages(data);});
+  }catch(error){setMessage(error instanceof Error?error.message:'Could not process this photo. Try a JPG or PNG image.');}
+ }
+ return <form onSubmit={submit} encType="multipart/form-data" className="image-upload-form"><div className="field"><label htmlFor={`photos-${listingId}`}>Choose a photo</label><input ref={input} id={`photos-${listingId}`} type="file" accept="image/jpeg,image/png,image/webp,image/heic" required disabled={busy}/><small>Up to 15 MB. The browser resizes photos and removes embedded EXIF/GPS data before upload. Upload one image at a time.</small></div><div className="field"><label htmlFor={`alt-${listingId}`}>Photo description</label><input id={`alt-${listingId}`} name="alt_text" required maxLength={200} placeholder="Describe what is visible" disabled={busy}/></div>{message&&<p className="notice" role="alert">{message}</p>}<button className="button" disabled={busy}>{busy?'Processing and uploading…':'Add photo'}</button></form>;
+}
