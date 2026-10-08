@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BrandLogo, Header } from '@/components/header';
 import './globals.css';
+import './admin/admin.css';
 
 const businessName = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Evergreen Global Properties';
 
 export const metadata: Metadata = {
   title: { default: businessName, template: `%s · ${businessName}` },
-  description: 'Find homes to rent or buy in Ibadan with Evergreen Global Properties. Explore local property and speak with a team that knows the city.',
+  description: 'Find homes to rent or buy in Ibadan, Lagos, and Abuja with Evergreen Global Properties. Explore properties and get local guidance in each city.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
 };
 

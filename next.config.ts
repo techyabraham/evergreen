@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  experimental: { serverActions: { bodySizeLimit: '85mb' } },
+  experimental: { serverActions: { bodySizeLimit: '6mb' } },
   async headers() {
     return [{ source: '/(.*)', headers: [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

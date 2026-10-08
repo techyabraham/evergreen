@@ -6,6 +6,7 @@
 - Admin access requires both a verified Supabase Auth session and `profiles.role = 'admin'`.
 - Public input is schema-validated in server actions/RPCs. Database-side throttles use one-way, salted IP hashes.
 - Listing storage is private. Public photos are signed only after a row passes public RLS; metadata and EXIF are stripped during re-encoding.
+- Demo image rows use reserved paths resolved to illustrative Unsplash CDN URLs. Demos are marked in the public UI, excluded from listing JSON-LD and sitemap entries, and rejected by enquiry/report/contact-event RPCs. Replacing the stock photos with real inventory requires approved images and an ordinary admin upload.
 - Response headers include clickjacking, MIME sniffing and referrer protections plus a restrictive CSP. Review the CSP against the selected hosting provider and any third-party integrations before enabling them.
 - The v3 migration has not been applied in this environment. Review and run it against a development Supabase project, then verify RLS and storage using both anon and admin identities before launch.
 

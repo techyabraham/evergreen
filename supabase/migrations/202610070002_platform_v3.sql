@@ -66,13 +66,12 @@ on conflict(slug) do nothing;
 
 insert into public.locations(level,name,slug,sort_order) values('state','Lagos','lagos',1),('state','Abuja (FCT)','abuja-fct',2) on conflict do nothing;
 insert into public.locations(parent_id,level,name,slug,sort_order)
-select s.id,'city',v.name,v.slug,v.n from public.locations s cross join (values
+select parent_state.id,'city',initcap(replace(v.slug,'-',' ')),v.slug,v.n from (values
  ('Lagos','lekki',1),('Lagos','ajah',2),('Lagos','ikoyi',3),('Lagos','victoria-island',4),('Lagos','ikeja',5),('Lagos','yaba',6),('Lagos','surulere',7),('Lagos','gbagada',8),('Lagos','maryland',9),('Lagos','ikorodu',10),('Lagos','ibeju-lekki',11),('Lagos','sangotedo',12),('Lagos','isolo',13),('Lagos','ogudu',14),('Lagos','ojodu',15),('Lagos','magodo-kosofe',16),('Lagos','epe',17),('Lagos','badagry',18),('Lagos','alimosho',19),('Lagos','oshodi',20),('Lagos','apapa',21),
  ('Abuja (FCT)','maitama',1),('Abuja (FCT)','asokoro',2),('Abuja (FCT)','wuse-2',3),('Abuja (FCT)','jabi',4),('Abuja (FCT)','gwarinpa',5),('Abuja (FCT)','life-camp',6),('Abuja (FCT)','katampe',7),('Abuja (FCT)','lokogoma',8),('Abuja (FCT)','lugbe',9),('Abuja (FCT)','kubwa',10),('Abuja (FCT)','guzape',11),('Abuja (FCT)','jahi',12),('Abuja (FCT)','utako',13)
-) v(parent_name,slug,n) join public.locations s on s.level='state' and s.name=v.parent_name on conflict do nothing;
+) v(parent_name,slug,n) join public.locations parent_state on parent_state.level='state' and parent_state.name=v.parent_name on conflict do nothing;
 
 alter table public.listings add column if not exists price_on_request boolean not null default false;
-alter table public.listings add column if not exists sort_price numeric generated always as (case when price_amount is null then null when purpose='rent' and price_period='month' then price_amount*12 else price_amount end) stored;
 alter table public.listings add column if not exists location_id uuid references public.locations(id);
 alter table public.listings add column if not exists location_path uuid[] not null default '{}';
 alter table public.listings add column if not exists public_location_label text;
@@ -93,7 +92,9 @@ do $$ declare constraint_row record; begin
  end loop;
 end $$;
 alter table public.listings alter column price_period drop not null;
+alter table public.listings drop column if exists sort_price;
 alter table public.listings alter column price_period type text using price_period::text;
+alter table public.listings add column sort_price numeric generated always as (case when price_amount is null then null when purpose='rent' and price_period='month' then price_amount*12 else price_amount end) stored;
 update public.listings set price_on_request=true,price_amount=null,price_period=null where price_period='price_on_request';
 update public.listings set price_on_request=true,price_amount=null,price_period=null where price_amount is null;
 update public.listings set price_on_request=true,price_amount=null,price_period=null where price_amount<=0;

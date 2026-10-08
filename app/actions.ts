@@ -2,6 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import {revalidatePath} from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { enquirySchema,listingInputSchema } from '@/lib/validation';
@@ -44,17 +45,18 @@ export async function submitPropertyRequest(form:FormData){
  if(result.ok)redirect('/request?sent=1');redirect(result.code==='RATE_LIMITED'?'/request?error=rate':'/request?error=unavailable');
 }export async function confirmListingAvailable(form:FormData){const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const {data:listing}=await supabase.from('listings').select('reference_code').eq('id',id).maybeSingle();if(!listing)redirect('/admin/listings?error=missing');const now=new Date().toISOString();const {error}=await supabase.from('listings').update({last_confirmed_at:now,updated_at:now}).eq('id',id);if(error)redirect('/admin/listings?error=save');redirect('/admin/listings?saved=confirmed');}export async function saveListing(form:FormData){
  const {supabase,user}=await requireAdmin();
- const parsed=listingInputSchema.safeParse(Object.fromEntries(form.entries()));if(!parsed.success)redirect('/admin/listings/new?error=validation');
+ const id=String(form.get('id')||'');const categoryFromForm=form.get('category')==='vehicle'?'vehicle':'property';const editorError=(error:string)=>id?`/admin/listings/${id}/edit?error=${error}`:`/admin/listings/new?category=${categoryFromForm}&error=${error}`;
+ const parsed=listingInputSchema.safeParse(Object.fromEntries(form.entries()));if(!parsed.success)redirect(editorError('validation'));
  const x=parsed.data;const {data:settings}=await supabase.from('site_settings').select('short_let_enabled').eq('id',true).maybeSingle();
- if(x.purpose==='short_let'&&!settings?.short_let_enabled)redirect('/admin/listings/new?error=short-let-disabled');
- if(x.category==='vehicle'&&x.purpose!=='sale')redirect('/admin/listings/new?error=vehicle-purpose');
- if(x.category==='vehicle'&&(!x.make||!x.model))redirect('/admin/listings/new?error=vehicle-fields');
- if(x.category==='property'&&!x.property_type)redirect('/admin/listings/new?error=property-fields');
+ if(x.purpose==='short_let'&&!settings?.short_let_enabled)redirect(editorError('short-let-disabled'));
+ if(x.category==='vehicle'&&x.purpose!=='sale')redirect(editorError('vehicle-purpose'));
+ if(x.category==='vehicle'&&(!x.make||!x.model))redirect(editorError('vehicle-fields'));
+ if(x.category==='property'&&!x.property_type)redirect(editorError('property-fields'));
  const onRequest=x.price_period==='price_on_request';const price=onRequest?null:Number(x.price_amount);
- if(!onRequest&&(price===null||!Number.isFinite(price)||price<=0))redirect('/admin/listings/new?error=price');
- const id=String(form.get('id')||'');const {data:previous}=id?await supabase.from('listings').select('id,category,status,published_at,reference_code,slug').eq('id',id).maybeSingle():{data:null};
+ if(!onRequest&&(price===null||!Number.isFinite(price)||price<=0))redirect(editorError('price'));
+ const {data:previous}=id?await supabase.from('listings').select('id,category,status,published_at,reference_code,slug').eq('id',id).maybeSingle():{data:null};
  if(id&&!previous)redirect('/admin/listings?error=missing');
- if(previous&&previous.category!==x.category&&previous.status!=='draft')redirect(`/admin/listings/${id}/edit?error=unpublish-first`);
+ if(previous&&previous.category!==x.category)redirect(`/admin/listings/${id}/edit?error=category`);
  const rawSlug=String(form.get('slug')||x.title);let slug=slugPart(rawSlug).slice(0,100).replace(/-+$/,'')||'listing';
  if(!id){const {data:duplicate}=await supabase.from('listings').select('id').eq('slug',slug).maybeSingle();if(duplicate)slug=`${slug.slice(0,88)}-${randomUUID().slice(0,6).toLowerCase()}`;}
  const locationId=x.location_id||null;let state=x.state||null;let city=x.city||null;let area=x.area||null;
@@ -62,7 +64,7 @@ export async function submitPropertyRequest(form:FormData){
  const values={category:x.category,purpose:x.purpose,title:x.title,description:x.description,price_amount:price,price_on_request:onRequest,price_period:onRequest?null:x.price_period,currency:'NGN',slug,state,city,area,public_location_label:x.public_location_label||[area,city,state].filter(Boolean).join(', ')||null,location_id:locationId,status:previous?.status||'draft',featured:false,last_confirmed_at:x.last_confirmed_at?new Date(x.last_confirmed_at).toISOString():null,fees_ack_at:x.fees_acknowledged?new Date().toISOString():null,updated_at:new Date().toISOString(),...(previous?{}:{created_by:user.id})};
  let listingId=id;
  if(previous){const {error}=await supabase.from('listings').update(values).eq('id',listingId);if(error)redirect(`/admin/listings/${id}/edit?error=save`);}
- else{const {data,error}=await supabase.from('listings').insert({...values,created_by:user.id}).select('id').single();if(error||!data)redirect('/admin/listings/new?error=save');listingId=data.id;}
+ else{const {data,error}=await supabase.from('listings').insert({...values,created_by:user.id}).select('id').single();if(error||!data)redirect(editorError('save'));listingId=data.id;}
  if(x.category==='property'){
   await supabase.from('vehicle_details').delete().eq('listing_id',listingId);
   const amenities=(x.amenities||'').split(',').map(value=>value.trim().toLowerCase().replaceAll(' ','_')).filter(value=>['gated_estate','security_24h','cctv','security_doors','perimeter_fence','prepaid_meter','standby_generator','solar_inverter','borehole_water','water_treatment','fast_internet','street_lights','drainage_system','all_rooms_ensuite','pop_ceiling','fitted_kitchen','fitted_wardrobes','fitted_ac','tiled_floors','balcony','big_compound','swimming_pool','gym','elevator','garden','parking_space','supermarket_nearby','good_road_access','near_public_transport','school_nearby'].includes(value));
@@ -96,20 +98,21 @@ function combineMoney(first:string|undefined,second:string|undefined){const a=mo
 export async function uploadListingImages(form:FormData){
  const {supabase}=await requireAdmin();const id=String(form.get('id')||'');
  const display=form.get('display');const thumb=form.get('thumb');const altText=String(form.get('alt_text')||'').trim();const width=Number(form.get('width'));const height=Number(form.get('height'));const blurData=String(form.get('blur_data_url')||'');
- if(!(display instanceof File)||!(thumb instanceof File)||display.size===0||thumb.size===0||!altText||altText.length>200||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>10000||height>10000||!blurData.startsWith('data:image/')||blurData.length>2048)redirect(`/admin/listings/${id}/edit?error=photo-rules`);
- if(display.size>2*1024*1024||thumb.size>2*1024*1024||!['image/webp','image/jpeg','image/png'].includes(display.type)||display.type!==thumb.type)redirect(`/admin/listings/${id}/edit?error=photo-rules`);
+ if(!z.string().uuid().safeParse(id).success)return {ok:false,error:'photo-rules'};
+ if(!(display instanceof File)||!(thumb instanceof File)||display.size===0||thumb.size===0||!altText||altText.length>200||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>10000||height>10000||!blurData.startsWith('data:image/')||blurData.length>2048)return {ok:false,error:'photo-rules'};
+ if(display.size>2*1024*1024||thumb.size>2*1024*1024||!['image/webp','image/jpeg','image/png'].includes(display.type)||display.type!==thumb.type)return {ok:false,error:'photo-rules'};
  const checkSignature=async(file:File)=>{const bytes=new Uint8Array(await file.slice(0,12).arrayBuffer());return file.type==='image/jpeg'?bytes[0]===255&&bytes[1]===216&&bytes[2]===255:file.type==='image/png'?bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71:file.type==='image/webp'?String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP':false;};
- if(!(await checkSignature(display))||!(await checkSignature(thumb)))redirect(`/admin/listings/${id}/edit?error=photo-rules`);
- const {data:owner}=await supabase.from('listings').select('id').eq('id',id).maybeSingle();if(!owner)redirect('/admin/listings');
- const {count}=await supabase.from('listing_images').select('id',{count:'exact',head:true}).eq('listing_id',id);if((count??0)+1>20)redirect(`/admin/listings/${id}/edit?error=photo-limit`);
+ if(!(await checkSignature(display))||!(await checkSignature(thumb)))return {ok:false,error:'photo-rules'};
+ const {data:owner}=await supabase.from('listings').select('id').eq('id',id).maybeSingle();if(!owner)return {ok:false,error:'missing'};
+ const {count}=await supabase.from('listing_images').select('id',{count:'exact',head:true}).eq('listing_id',id);if((count??0)+1>20)return {ok:false,error:'photo-limit'};
  const extension=display.type==='image/webp'?'webp':display.type==='image/png'?'png':'jpg';const objectId=randomUUID();const folder=`listings/${id}/${objectId}`;const displayPath=`${folder}.${extension}`;const thumbPath=`${folder}-t.${extension}`;
  const uploadWithRetry=async(path:string,file:File)=>{for(let attempt=0;attempt<3;attempt++){const result=await supabase.storage.from('listing-media').upload(path,file,{contentType:file.type,upsert:false});if(!result.error)return true;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,250*2**attempt));}return false;};
- if(!(await uploadWithRetry(displayPath,display)))redirect(`/admin/listings/${id}/edit?error=upload`);
- if(!(await uploadWithRetry(thumbPath,thumb))){await supabase.storage.from('listing-media').remove([displayPath]);redirect(`/admin/listings/${id}/edit?error=upload`);}
+ if(!(await uploadWithRetry(displayPath,display)))return {ok:false,error:'upload'};
+ if(!(await uploadWithRetry(thumbPath,thumb))){await supabase.storage.from('listing-media').remove([displayPath]);return {ok:false,error:'upload'};}
  const {count:existing}=await supabase.from('listing_images').select('id',{count:'exact',head:true}).eq('listing_id',id);
  const {error}=await supabase.from('listing_images').insert({listing_id:id,storage_path:displayPath,thumb_path:thumbPath,width,height,blur_data_url:blurData,alt_text:altText,sort_order:existing??0,is_cover:(existing??0)===0});
- if(error){await supabase.storage.from('listing-media').remove([displayPath,thumbPath]);redirect(`/admin/listings/${id}/edit?error=metadata`);}
- redirect(`/admin/listings/${id}/edit?photos=added`);
+ if(error){await supabase.storage.from('listing-media').remove([displayPath,thumbPath]);return {ok:false,error:'metadata'};}
+ revalidatePath(`/admin/listings/${id}/edit`);return {ok:true};
 }export async function manageListingImage(form:FormData){
   const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const imageId=String(form.get('image_id')||'');const operation=String(form.get('operation')||'');
   const {data:image}=await supabase.from('listing_images').select('id,storage_path,thumb_path,listing_id,sort_order').eq('id',imageId).eq('listing_id',id).maybeSingle();if(!image)redirect(`/admin/listings/${id}/edit?error=image`);

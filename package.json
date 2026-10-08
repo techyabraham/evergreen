@@ -1,5 +1,5 @@
 {
-  "name": "lagos-listings",
+  "name": "evergreen-global-properties",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -33,6 +33,7 @@
     "@types/react-dom": "^19.1.9",
     "eslint": "^9.36.0",
     "eslint-config-next": "^16.4.0",
+    "supabase": "^2.120.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

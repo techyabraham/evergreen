@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     listings.push(...batch);
     if (batch.length < 48) break;
   }
-  return [...fixed, ...listings.map(item => ({
+  return [...fixed, ...listings.filter(item => !item.is_demo).map(item => ({
     url: `${base}${item.category === 'vehicle'
       ? `/car/${[item.vehicle_details?.make, item.vehicle_details?.model, item.vehicle_details?.year, item.city, item.reference_code].filter(Boolean).map(value => slugPart(String(value))).join('-')}`
       : `/property/${propertySlug({ title: item.title, referenceCode: item.reference_code, beds: item.property_details?.bedrooms, type: item.property_details?.property_type, purpose: item.purpose, area: item.area, city: item.city })}`}`,
