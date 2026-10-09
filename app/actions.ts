@@ -91,7 +91,7 @@ export async function submitPropertyRequest(form:FormData){
  if(desiredStatus!==currentStatus){if(desiredStatus==='under_offer'&&currentStatus==='draft'){const first=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:'published',p_note:x.relist_note||null});if(first.error||!(first.data as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=readiness`);}
   const {data:transition,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:desiredStatus,p_note:x.relist_note||null});if(error||!(transition as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=readiness`);
  }
- redirect(`/admin/listings/${listingId}/edit?saved=1`);
+ redirect(`/admin/listings/${listingId}/edit?saved=1${id?'':'#photos-heading'}`);
 }
 function money(value:string|undefined){if(!value)return null;const amount=Number(value);return Number.isFinite(amount)&&amount>=0?amount:null;}
 function combineMoney(first:string|undefined,second:string|undefined){const a=money(first),b=money(second);if(a===null&&b===null)return undefined;return String((a??0)+(b??0));}export async function setListingStatus(form:FormData){const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const status=String(form.get('status')||'');const note=String(form.get('note')||'').trim();if(!z.enum(['draft','published','under_offer','rented','sold','archived']).safeParse(status).success)redirect('/admin/listings?error=status');const {data,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:id,p_status:status,p_note:note||null});if(error||!(data as {ok?:boolean}|null)?.ok)redirect('/admin/listings?error=transition');redirect('/admin/listings?saved=1');}

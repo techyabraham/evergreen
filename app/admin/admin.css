@@ -72,6 +72,14 @@
 .admin-quick-links{display:flex;gap:16px;margin:8px 0 4px}
 .admin-quick-links a{display:inline-flex;align-items:center;min-height:38px;color:#607166;font-size:11px;font-weight:650}
 .admin-page .notice{border:1px solid #d7e4d3;border-radius:9px}
+.photo-step-link{display:flex;align-items:center;gap:13px;max-width:680px;min-height:68px;margin:15px 0;padding:13px 17px;border:1px solid #bbcfb6;border-radius:11px;background:linear-gradient(105deg,#eff5e9,#fff);color:#294b36;box-shadow:0 7px 18px #273c2e08}
+.photo-step-link:hover{border-color:#71926e;background:#edf4e8;text-decoration:none}
+.photo-step-link>span:first-child{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:#dfead8;color:#2f6140;font-size:23px}
+.photo-step-link>span:nth-child(2){display:grid;gap:3px}.photo-step-link strong{font-size:13px}.photo-step-link small{color:#6d7c70;font-size:10px}.photo-step-arrow{margin-left:auto;color:#456b4c;font-size:20px}
+.photo-step-callout{display:flex;align-items:center;gap:12px;max-width:780px;margin:20px 0;padding:16px 18px;border:1px solid #cfddc8;border-radius:12px;background:#f3f7ee}
+.photo-step-callout>div{flex:1}.photo-step-callout strong{color:#2b4c38;font-size:13px}.photo-step-callout p{margin:4px 0 0;color:#68766c;font-size:11px;line-height:1.5}
+.photo-step-number{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#315b3f;color:white;font-size:12px;font-weight:750}
+.listing-details-heading{margin:32px 0 -8px;padding-top:20px;border-top:1px solid #e1e7df}.listing-details-heading .eyebrow{margin:0 0 5px}.listing-details-heading h2{margin:0;color:#294737;font:600 26px var(--serif)}.listing-details-heading p:last-child{margin:5px 0;color:#68766c;font-size:12px}
 .admin-page .listing-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0 34px}
 .admin-page .listing-form>fieldset,.admin-page .listing-form>details{min-width:0;margin:0;padding:20px;border:1px solid #e0e6dd;border-radius:13px;background:#fff}
 .admin-page .listing-form>fieldset:first-of-type{grid-column:1/-1}
