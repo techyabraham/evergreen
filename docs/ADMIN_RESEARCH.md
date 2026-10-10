@@ -22,6 +22,15 @@ The installed Next.js 16 guide warns that Server Actions are reachable endpoints
 
 Supabase Storage requires policies on `storage.objects` for uploads and recommends using the Storage API for object operations. The existing migration limits the bucket's MIME types and size and restricts object access to admins. See [Supabase Storage access control](https://supabase.com/docs/guides/storage/security/access-control) and [bucket fundamentals](https://supabase.com/docs/guides/storage/buckets/fundamentals).
 
+## Public property discovery refresh
+
+- Lead with the customer's property intent and location: the homepage search asks whether they want to rent, buy, or (when enabled) short-let, plus a city and keyword. Property search supports the same everyday filters first and groups further criteria under a keyboard-operable “More filters” disclosure.
+- Give Ibadan, Lagos, and Abuja equal, direct entry points. Keep vehicle browsing secondary because the realtor's primary offer is property.
+- Keep filters editable at the results page and expose applied criteria as removable chips with a clear-all action. Use clear result context and a request path when no listing matches.
+- Present each city and listing with a consistent editorial hierarchy, generous imagery, legible prices and useful details. Do not imply inventory, availability, verification, or service capacity beyond the records and business-provided information.
+
+The interaction pattern follows the [Rightmove search guide](https://faq.rightmove.co.uk/support/solutions/articles/7000048777-how-to-start-your-search-on-rightmove), which explains starting with a location and rent/buy intent, then refining criteria from the results page, and the [PropertyPro Nigeria homepage](https://propertypro.ng/), which foregrounds property purpose and location-specific discovery. These are reference patterns only; no listings, copy, images, logos, or visual identity were copied. The visual system stays specific to Evergreen and the owner's three-city focus.
+
 ## Verification limits
 
 Typecheck, lint, and production build are run after the implementation. No live Supabase upload was attempted because this change must not write to the production database or Storage. Browser-level upload, mobile interaction, and visual checks remain staging/manual verification.
