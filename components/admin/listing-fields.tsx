@@ -1,5 +1,6 @@
 import {saveListing} from '@/app/actions';
 import type {Listing,ListingFee,PropertyDetails,VehicleDetails} from '@/lib/types';
+import {VehicleCatalogFields} from '@/components/admin/vehicle-catalog-fields';
 export type LocationOption={id:string;parent_id:string|null;level:string;name:string;slug:string};
 export type PropertyTypeOption={slug:string;label:string;group_slug:string};
 export function ListingFields({listing,property,vehicle,privateData,locations,types,shortLetEnabled,category}:{listing?:Listing;property?:PropertyDetails|null;vehicle?:VehicleDetails|null;privateData?:{exact_address?:string|null;owner_name?:string|null;owner_phone?:string|null;vin?:string|null;internal_notes?:string|null}|null;locations:LocationOption[];types:PropertyTypeOption[];shortLetEnabled:boolean;category:'property'|'vehicle'}){
@@ -38,9 +39,7 @@ export function ListingFields({listing,property,vehicle,privateData,locations,ty
    <p className="muted">Fees are optional. If you leave them blank, visitors will be asked to contact you for details.</p>
   </fieldset></>}
   {category==='vehicle'&&<fieldset><legend>Vehicle details</legend>
-   <div className="field"><label htmlFor="make">Make <span className="muted">(optional)</span></label><input id="make" name="make" maxLength={60} defaultValue={vehicle?.make||''}/></div>
-   <div className="field"><label htmlFor="model">Model <span className="muted">(optional)</span></label><input id="model" name="model" maxLength={60} defaultValue={vehicle?.model||''}/></div>
-   <div className="field"><label htmlFor="year">Year</label><input id="year" name="year" type="number" min="1980" max={new Date().getFullYear()+1} defaultValue={vehicle?.year??''}/></div>
+   <VehicleCatalogFields make={vehicle?.make||''} model={vehicle?.model||''} year={vehicle?.year??null} vehicleClass={vehicle?.vehicle_class||null}/>
    <div className="field"><label htmlFor="mileage">Mileage</label><input id="mileage" name="mileage" type="number" min="0" defaultValue={vehicle?.mileage??''}/></div>
    <div className="field"><label htmlFor="condition">Condition</label><select id="condition" name="condition" defaultValue={vehicle?.condition||''}><option value="">Choose one</option><option value="new">New</option><option value="used">Used</option></select></div>
    <div className="field"><label htmlFor="import_status">Import status</label><select id="import_status" name="import_status" defaultValue={vehicle?.import_status||''}><option value="">Choose one</option><option value="brand_new">Brand new</option><option value="foreign_used">Foreign used</option><option value="nigerian_used">Nigerian used</option></select></div>

@@ -28,3 +28,6 @@ Keep the consumer journey property-first, with explicit rent/buy intent, city an
 
 ## Minimal listing publication
 Admin can publish with a title and one cover photo. Description, price, location, category-specific facts, availability confirmation, and fee information can be added later. The database remains the authority for this rule; a new migration replaces the earlier readiness gate and makes blank property/vehicle facts valid. Public views use “Price on request”, “Location available on request”, and the existing unconfirmed availability copy instead of inventing missing details. A generic “Listing photo” alt value is used only when an uploader leaves the optional description blank.
+
+## Vehicle reference catalog
+Use NHTSA vPIC for live make/model suggestions across its passenger-car, truck, bus, MPV, and motorcycle data. Keep free-text entry because vPIC is a manufacturer-submitted safety catalog, not a complete global catalogue. Include manufacturer-sourced Innoson suggestions locally. Reference data never creates public stock or represents availability; each actual vehicle listing still requires admin entry. Details and source limitations are in `docs/VEHICLE_CATALOG.md`.

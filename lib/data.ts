@@ -28,6 +28,7 @@ export async function getListings(filters:Record<string,string|undefined>={},lim
  if(filters.new==='true')query=query.eq('is_newly_built',true);
  if(filters.make)query=query.ilike('vehicle_details.make',`%${filters.make.replace(/[%_,]/g,'')}%`);
  if(filters.model)query=query.ilike('vehicle_details.model',`%${filters.model.replace(/[%_,]/g,'')}%`);
+ if(filters.vehicle_class)query=query.eq('vehicle_details.vehicle_class',filters.vehicle_class);
  if(filters.year_min&&/^\d{4}$/.test(filters.year_min))query=query.gte('vehicle_details.year',Number(filters.year_min));
  if(filters.year_max&&/^\d{4}$/.test(filters.year_max))query=query.lte('vehicle_details.year',Number(filters.year_max));
  if(filters.condition)query=query.eq('vehicle_details.condition',filters.condition);

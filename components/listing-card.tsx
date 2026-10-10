@@ -5,6 +5,7 @@ import {formatPrice,annualEquivalent} from '@/lib/domain/money';
 import {formatNaira} from '@/lib/domain/money';
 import {propertySlug,slugPart} from '@/lib/domain/slug';
 import {freshness} from '@/lib/domain/freshness';
+import {vehicleClassLabel} from '@/lib/domain/vehicle-catalog';
 
 export function listingHref(listing:Listing){
  if(listing.category==='vehicle'){const vehicle=listing.vehicle_details;const slug=[vehicle?.make,vehicle?.model,vehicle?.year,listing.city,listing.reference_code].filter(Boolean).map(value=>slugPart(String(value))).join('-');return `/car/${slug}`;}
@@ -21,7 +22,7 @@ export function ListingCard({listing,priority=false}:{listing:Listing;priority?:
   {listing.listing_images&&listing.listing_images.length>1&&<span className="photo-count" aria-label={`${listing.listing_images.length} photos`}>{listing.listing_images.length} photos</span>}
  </Link><div className="card-body"><p className="eyebrow">{location}</p><h3><Link href={href}>{listing.title}</Link></h3><p className="price">{listing.is_demo?'Illustrative demo':price}{!listing.is_demo&&listing.negotiable&&<span className="negotiable-chip">Negotiable</span>}</p>
   {listing.purpose==='rent'&&listing.price_period==='month'&&listing.price_amount!==null&&<p className="annual-equivalent">≈ {formatNaira(annualEquivalent(Number(listing.price_amount),'month'))} / year</p>}
-  <p className="facts">{(listing.category==='property'?[listing.property_details?.property_type?.replaceAll('_',' '),listing.property_details?.bedrooms!=null?`${listing.property_details.bedrooms} bedrooms`:null,listing.property_details?.bathrooms!=null?`${listing.property_details.bathrooms} bathrooms`:null]:[listing.vehicle_details?.year,listing.vehicle_details?.make,listing.vehicle_details?.model]).filter(Boolean).join(' · ')||'Details available on request'}</p>
+  <p className="facts">{(listing.category==='property'?[listing.property_details?.property_type?.replaceAll('_',' '),listing.property_details?.bedrooms!=null?`${listing.property_details.bedrooms} bedrooms`:null,listing.property_details?.bathrooms!=null?`${listing.property_details.bathrooms} bathrooms`:null]:[vehicleClassLabel(listing.vehicle_details?.vehicle_class),listing.vehicle_details?.year,listing.vehicle_details?.make,listing.vehicle_details?.model]).filter(Boolean).join(' · ')||'Details available on request'}</p>
   {confirmed?.kind==='fresh'&&<p className="freshness-badge">Confirmed {confirmed.days===0?'today':`${confirmed.days} day${confirmed.days===1?'':'s'} ago`}</p>}{confirmed?.kind==='stale'&&<p className="stale-badge">Availability not recently confirmed</p>}
  </div></article>;
 }

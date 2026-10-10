@@ -80,7 +80,7 @@ export async function submitPropertyRequest(form:FormData){
   await supabase.from('property_details').delete().eq('listing_id',listingId);await supabase.from('listing_fees').delete().eq('listing_id',listingId);
   const condition=x.condition?.toLowerCase().includes('new')?'new':x.condition?'used':null;
   const importStatus=x.import_status?.toLowerCase().includes('foreign')?'foreign_used':x.import_status?.toLowerCase().includes('nigerian')?'nigerian_used':x.import_status?'brand_new':null;
-  const details={listing_id:listingId,make:x.make||null,model:x.model||null,year:x.year?Number(x.year):null,mileage:x.mileage?Number(x.mileage):null,mileage_unit:x.mileage?'km':null,condition,import_status:importStatus,transmission:x.transmission?.toLowerCase()||null,fuel_type:x.fuel_type?.toLowerCase()||null,colour:x.colour||null};
+  const details={listing_id:listingId,make:x.make||null,model:x.model||null,year:x.year?Number(x.year):null,mileage:x.mileage?Number(x.mileage):null,mileage_unit:x.mileage?'km':null,condition,import_status:importStatus,transmission:x.transmission?.toLowerCase()||null,fuel_type:x.fuel_type?.toLowerCase()||null,colour:x.colour||null,vehicle_class:x.vehicle_class||null};
  const {error}=await supabase.from('vehicle_details').upsert(details);if(error)redirect(`/admin/listings/${listingId}/edit?error=details`);
  }
  const privateFields={listing_id:listingId,exact_address:x.exact_address||null,owner_name:x.owner_name||null,owner_phone:x.owner_phone||null,vin:x.vin||null,internal_notes:x.internal_notes||null,updated_at:new Date().toISOString()};

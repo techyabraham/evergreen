@@ -1,0 +1,26 @@
+'use client';
+import {useEffect,useId,useState} from 'react';
+import {innosonModels,isInnosonMake,vehicleClasses} from '@/lib/domain/vehicle-catalog';
+
+type CatalogResult={items:string[];source?:string;error?:string;truncated?:boolean;note?:string};
+export function VehicleCatalogFields({make:initialMake,model:initialModel,year:initialYear,vehicleClass:initialClass}:{make:string;model:string;year:number|null;vehicleClass:string|null}){
+ const id=useId().replaceAll(':','');const [vehicleClass,setVehicleClass]=useState(initialClass||'');const [make,setMake]=useState(initialMake);const [model,setModel]=useState(initialModel);const [year,setYear]=useState(initialYear?String(initialYear):'');const [makeOptions,setMakeOptions]=useState<string[]>([]);const [modelOptions,setModelOptions]=useState<string[]>([]);const [status,setStatus]=useState('Type at least two characters for catalog suggestions. You can always enter a make or model manually.');
+ const selectedClass=vehicleClasses.find(item=>item.value===vehicleClass);const vpicType=selectedClass?.vpicType||'';const innoson=isInnosonMake(make);const visibleMakeOptions=make.trim().length>=2&&vpicType&&!innoson?makeOptions:[];const visibleModelOptions=innoson?innosonModels:make.trim().length>=2&&vpicType?modelOptions:[];
+ useEffect(()=>{
+  if(make.trim().length<2||!vpicType||innoson)return;
+  const controller=new AbortController();const timer=setTimeout(()=>{fetch(`/api/vehicle-catalog?kind=makes&type=${encodeURIComponent(vpicType)}&q=${encodeURIComponent(make.trim())}`,{signal:controller.signal}).then(response=>response.json() as Promise<CatalogResult>).then(result=>{setMakeOptions(result.items||[]);setStatus(result.error?'Catalog temporarily unavailable. Manual entry still works.':result.items?.length?'Suggestions from NHTSA vPIC.':'No catalog match; continue with manual entry.');}).catch(()=>{if(!controller.signal.aborted)setStatus('Catalog temporarily unavailable. Manual entry still works.');});},300);
+  return ()=>{clearTimeout(timer);controller.abort();};
+ },[make,vpicType,innoson]);
+ useEffect(()=>{
+  if(innoson||make.trim().length<2||!vpicType)return;
+  const controller=new AbortController();const timer=setTimeout(()=>{const params=new URLSearchParams({kind:'models',type:vpicType,make:make.trim()});if(year)params.set('year',year);fetch(`/api/vehicle-catalog?${params}`,{signal:controller.signal}).then(response=>response.json() as Promise<CatalogResult>).then(result=>{setModelOptions(result.items||[]);if(result.error)setStatus('Catalog temporarily unavailable. Manual entry still works.');else if(result.note)setStatus(result.note);else if(result.truncated)setStatus('Showing the first 500 catalog models. You can enter any other model manually.');}).catch(()=>{if(!controller.signal.aborted)setStatus('Catalog temporarily unavailable. Manual entry still works.');});},350);
+  return ()=>{clearTimeout(timer);controller.abort();};
+ },[make,year,vpicType,innoson]);
+ return <>
+  <div className="field"><label htmlFor={`${id}-class`}>Vehicle type <span className="muted">(optional)</span></label><select id={`${id}-class`} name="vehicle_class" value={vehicleClass} onChange={event=>{const selected=vehicleClasses.find(item=>item.value===event.target.value);setVehicleClass(event.target.value);setStatus(selected?.vpicType?'Enter at least two make characters for NHTSA catalog suggestions.':'Type the make and model manually.')}}><option value="">Choose a vehicle type</option>{vehicleClasses.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></div>
+  <div className="field"><label htmlFor={`${id}-make`}>Make <span className="muted">(optional)</span></label><input id={`${id}-make`} name="make" list={`${id}-makes`} maxLength={60} value={make} onChange={event=>{const value=event.target.value;setMake(value);if(value!==make)setModel('');setStatus(isInnosonMake(value)?'Innoson suggestions use manufacturer-published product names; type a model or choose a suggestion.':value.trim().length>=2&&vpicType?'Loading catalog suggestions…':!vpicType?'Choose a vehicle type for catalog suggestions, or enter the make manually.':'Type at least two characters for catalog suggestions.');}} autoComplete="off"/><datalist id={`${id}-makes`}>{visibleMakeOptions.map(item=><option key={item} value={item}/>)}{['Innoson','IVM'].filter(item=>item.toLowerCase().includes(make.toLowerCase())||make.toLowerCase().includes('in')).map(item=><option key={item} value={item}/>)}</datalist></div>
+  <div className="field"><label htmlFor={`${id}-model`}>Model <span className="muted">(optional)</span></label><input id={`${id}-model`} name="model" list={`${id}-models`} maxLength={60} value={model} onChange={event=>setModel(event.target.value)} autoComplete="off"/><datalist id={`${id}-models`}>{visibleModelOptions.map(item=><option key={item} value={item}/>)}</datalist></div>
+  <div className="field"><label htmlFor={`${id}-year`}>Year <span className="muted">(optional)</span></label><input id={`${id}-year`} name="year" type="number" min="1900" max={new Date().getFullYear()+1} value={year} onChange={event=>setYear(event.target.value)}/></div>
+  <p className="muted" role="status">{status} NHTSA vPIC is a reference catalog and may not cover every vehicle sold in Nigeria.</p>
+ </>;
+}
