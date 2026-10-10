@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getListings, getPublicSettings } from '@/lib/data';
 import { ListingCard } from '@/components/listing-card';
+import type { Listing } from '@/lib/types';
 
 const cities = [
   { name: 'Ibadan', state: 'Oyo', code: '01' },
@@ -9,11 +10,23 @@ const cities = [
   { name: 'Abuja', state: 'FCT', code: '03' },
 ];
 
+function PropertyCollection({ title, eyebrow, href, listings }: { title: string; eyebrow: string; href: string; listings: Listing[] }) {
+  if (!listings.length) return null;
+  return <section className="wrap section home-collection" aria-label={title}>
+    <div className="section-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div><Link href={href}>View all <span aria-hidden="true">↗</span></Link></div>
+    <div className="cards">{listings.map(listing => <ListingCard key={listing.id} listing={listing} />)}</div>
+  </section>;
+}
+
 export default async function Home() {
-  const [listings, settings] = await Promise.all([
+  const [featured, latest, byCity, settings] = await Promise.all([
+    getListings({ category: 'property', featured: 'true' }, 6),
     getListings({ category: 'property' }, 6),
+    Promise.all(cities.map(city => getListings({ category: 'property', city: city.name }, 3))),
     getPublicSettings(),
   ]);
+  const featuredIds = new Set(featured.map(listing => listing.id));
+  const latestNotFeatured = latest.filter(listing => !featuredIds.has(listing.id));
   const shortLetEnabled = Boolean(settings?.short_let_enabled);
 
   return (
@@ -85,21 +98,21 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="wrap section home-collection">
-        <div className="section-head">
-          <div><p className="eyebrow">A considered collection</p><h2>Homes in the spotlight</h2></div>
-          <Link href="/properties">Explore all properties <span aria-hidden="true">↗</span></Link>
-        </div>
-        {listings.length ? <div className="cards">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div> : (
+      <PropertyCollection title="Featured properties" eyebrow="Selected by the realtor" href="/properties?featured=true" listings={featured} />
+
+      {!latestNotFeatured.length && !featured.length ? (
+        <section className="wrap section home-collection">
           <div className="empty-state home-empty-state">
             <span className="empty-spark" aria-hidden="true">✳</span>
-            <p className="eyebrow">A home search, made personal</p>
-            <h2>Tell us what you have in mind.</h2>
-            <p>Share your preferred city, area, budget and kind of home. The realtor can follow up about options that fit.</p>
+            <p className="eyebrow">Property listings</p>
+            <h2>New homes will appear here.</h2>
+            <p>Browse by city or tell the realtor what you are looking for.</p>
             <Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link>
           </div>
-        )}
-      </section>
+        </section>
+      ) : <PropertyCollection title="Recently listed" eyebrow="The latest additions" href="/properties?sort=newest" listings={latestNotFeatured} />}
+
+      {cities.map((city, index) => <PropertyCollection key={city.name} title={`Properties in ${city.name}`} eyebrow={`${city.state} · Browse by location`} href={`/properties?city=${encodeURIComponent(city.name)}`} listings={byCity[index]} />)}
 
       <section className="home-bottom-cta">
         <div className="wrap home-bottom-cta-inner">

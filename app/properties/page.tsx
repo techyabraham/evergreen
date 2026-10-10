@@ -4,6 +4,7 @@ import { getListings, getPublicSettings } from '@/lib/data';
 import { parseQuery } from '@/lib/domain/filters';
 import { ListingCard } from '@/components/listing-card';
 import { Pagination } from '@/components/pagination';
+import type { Listing } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Properties for rent and sale',
@@ -14,6 +15,15 @@ export const metadata: Metadata = {
 type SearchParams = Record<string, string | string[] | undefined>;
 const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 const safeText = (value: string | undefined, max: number) => value?.replace(/[%,_\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) || undefined;
+const cities = [{ name: 'Ibadan', state: 'Oyo State' }, { name: 'Lagos', state: 'Lagos' }, { name: 'Abuja', state: 'Abuja (FCT)' }];
+
+function PropertyCollection({ title, eyebrow, href, listings }: { title: string; eyebrow: string; href: string; listings: Listing[] }) {
+  if (!listings.length) return null;
+  return <section className="browse-collection" aria-label={title}>
+    <div className="section-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div><Link href={href}>View all <span aria-hidden="true">↗</span></Link></div>
+    <div className="cards">{listings.map(listing => <ListingCard key={listing.id} listing={listing} />)}</div>
+  </section>;
+}
 
 export default async function Properties({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const raw = await searchParams;
@@ -26,20 +36,28 @@ export default async function Properties({ searchParams }: { searchParams: Promi
   const city = safeText(first(raw.city), 80);
   const area = safeText(first(raw.area), 100);
   const state = safeText(first(raw.state), 80);
+  const featured = first(raw.featured) === 'true' ? 'true' : undefined;
   const page = parsed.page;
+  const hasSearchCriteria = Boolean(purpose || parsed.q || city || area || state || parsed.minPrice !== undefined || parsed.maxPrice !== undefined || parsed.beds !== undefined || parsed.bathrooms !== undefined || parsed.furnishing || parsed.amenities.length || featured || first(raw.sort));
   const filters: Record<string, string | undefined> = {
     category: 'property', purpose, q: parsed.q,
     min: parsed.minPrice?.toString(), max: parsed.maxPrice?.toString(),
     bedrooms: parsed.beds?.toString(), bathrooms: parsed.bathrooms?.toString(),
     furnishing: parsed.furnishing, amenity: parsed.amenities[0], sort,
-    city, area, state,
+    city, area, state, featured,
   };
-  const rows = await getListings(filters, 25, (page - 1) * 24);
+  const [rows, featuredListings, latest, cityListings] = await Promise.all([
+    hasSearchCriteria ? getListings(filters, 25, (page - 1) * 24) : Promise.resolve([]),
+    hasSearchCriteria ? Promise.resolve([]) : getListings({ category: 'property', featured: 'true' }, 6),
+    hasSearchCriteria ? Promise.resolve([]) : getListings({ category: 'property' }, 6),
+    hasSearchCriteria ? Promise.resolve([]) : Promise.all(cities.map(item => getListings({ category: 'property', city: item.name }, 3))),
+  ]);
   const listings = rows.slice(0, 24);
   const hasMore = rows.length > 24;
   const selectedAmenity = parsed.amenities[0];
   const active = [
     purpose && { key: 'purpose', label: purpose === 'sale' ? 'For sale' : purpose === 'short_let' ? 'Short let' : 'For rent' },
+    featured && { key: 'featured', label: 'Featured properties' },
     parsed.q && { key: 'q', label: `Search: ${parsed.q}` },
     city && { key: 'city', label: `City: ${city}` },
     area && { key: 'area', label: `Area: ${area}` },
@@ -93,7 +111,15 @@ export default async function Properties({ searchParams }: { searchParams: Promi
       </form>
     </section>
     {active.length>0&&<nav className="active-filter-list" aria-label="Applied filters"><span>Applied:</span>{active.map(item=><Link href={remove(item.key)} key={item.key} aria-label={`Remove ${item.label}`}>{item.label}<span aria-hidden="true"> ×</span></Link>)}<Link className="active-filter-clear" href="/properties">Clear all</Link></nav>}
-    <div className="results-toolbar"><p>{listings.length?`${listings.length}${hasMore?'+':''} properties shown`:'No properties match your search.'}</p>{page>1&&<span>Page {page}</span>}</div>
-    {listings.length?<><div className="cards">{listings.map(listing=><ListingCard key={listing.id} listing={listing}/>)}</div><Pagination path="/properties" filters={filters} page={page} hasMore={hasMore}/></>:<div className="empty-state property-empty"><span className="empty-spark" aria-hidden="true">⌂</span><p className="eyebrow">No homes found</p><h2>Let’s widen the search.</h2><p>Try a different city or adjust your filters. If you know what you need, send a request and the realtor can follow up.</p><Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link></div>}
+    {hasSearchCriteria ? <>
+      <div className="results-toolbar"><p>{listings.length?`${listings.length}${hasMore?'+':''} matching properties`:'No properties match your search.'}</p>{page>1&&<span>Page {page}</span>}</div>
+      {listings.length?<><div className="cards">{listings.map(listing=><ListingCard key={listing.id} listing={listing}/>)}</div><Pagination path="/properties" filters={filters} page={page} hasMore={hasMore}/></>:<div className="empty-state property-empty"><span className="empty-spark" aria-hidden="true">⌂</span><p className="eyebrow">No homes found</p><h2>Let’s widen the search.</h2><p>Try a different city or adjust your filters. If you know what you need, send a request and the realtor can follow up.</p><Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link></div>}
+    </> : <div className="browse-collections">
+      <p className="browse-intro">Browse the latest property listings across Ibadan, Lagos and Abuja. Use the search above when you are ready to narrow the results.</p>
+      <PropertyCollection title="Featured properties" eyebrow="Selected by the realtor" href="/properties?featured=true" listings={featuredListings} />
+      <PropertyCollection title="Recently listed" eyebrow="The latest additions" href="/properties?sort=newest" listings={latest.filter(listing => !featuredListings.some(item => item.id === listing.id))} />
+      {cities.map((item, index) => <PropertyCollection key={item.name} title={`Properties in ${item.name}`} eyebrow={`${item.state} · Browse by location`} href={`/properties?city=${encodeURIComponent(item.name)}`} listings={cityListings[index]} />)}
+      {!featuredListings.length && !latest.length && <div className="empty-state property-empty"><span className="empty-spark" aria-hidden="true">⌂</span><p className="eyebrow">Property listings</p><h2>New homes will appear here.</h2><p>Send a request and the realtor can follow up about properties that fit.</p><Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link></div>}
+    </div>}
   </section>;
 }

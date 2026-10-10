@@ -12,6 +12,7 @@ export async function getListings(filters:Record<string,string|undefined>={},lim
  let query=supabase.from('listings').select(select).in('status',['published','under_offer']).range(offset,offset+Math.min(limit,48)-1);
  if(excludeId)query=query.neq('id',excludeId);
  if(filters.category)query=query.eq('category',filters.category);
+ if(filters.featured==='true')query=query.eq('featured',true);
  if(filters.purpose)query=query.eq('purpose',filters.purpose);
  if(filters.q){const term=filters.q.replace(/[^\p{L}\p{N} -]/gu,' ').trim().slice(0,80);if(term)query=query.textSearch('search_tsv',term,{config:'simple',type:'websearch'});}
  if(filters.state)query=query.ilike('state',filters.state.replace(/[%_,]/g,''));

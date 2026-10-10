@@ -124,7 +124,7 @@ begin
  insert into public.listings(slug,reference_code,category,purpose,title,description,price_amount,currency,price_period,price_on_request,negotiable,state,city,area,public_location,status,featured,last_confirmed_at,published_at,created_by,location_id,is_demo)
  select v.slug,v.reference_code,'property','sale',v.title,
   'DEMONSTRATION ONLY. This is a fictional sample, not a real Evergreen property. All property details and the neighborhood pairing are illustrative. The stock photo does not depict this sample home. It is not available for rent or sale.',
-  null,'NGN',null,true,false,v.state_name,v.city_name,v.area_name,v.public_location,'published',false,null,now(),admin_id,area_loc.id,true
+  null,'NGN',null,true,false,v.state_name,v.city_name,v.area_name,v.public_location,'draft',false,null,null,admin_id,area_loc.id,true
  from (values
   ('demo-bodija-family-home','DM3A4B','Demo · Family Home in Bodija','Oyo State','Ibadan','Bodija','bodija','Bodija, Ibadan, Oyo State',1),
   ('demo-lekki-modern-home','DM3C5D','Demo · Modern Home in Lekki','Lagos','Lagos','Lekki','lekki','Lekki, Lagos',2),
@@ -147,4 +147,11 @@ begin
  from (values ('DM3A4B','demo-assets/bodija-exterior'),('DM3C5D','demo-assets/lekki-exterior'),('DM3E6F','demo-assets/maitama-interior')) as v(reference_code,storage_path)
  join public.listings l on l.reference_code=v.reference_code and l.is_demo
  on conflict(storage_path) do nothing;
+
+ -- The base schema requires property details before a property can be published.
+ -- Publish only after both subtype details and cover images have been inserted.
+ update public.listings
+ set status='published',published_at=now()
+ where is_demo and status='draft'
+  and reference_code in ('DM3A4B','DM3C5D','DM3E6F');
 end $$;

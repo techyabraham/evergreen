@@ -26,8 +26,14 @@ Admin inventory is separated into property and vehicle workspaces. Creation star
 ## Public frontend direction
 Keep the consumer journey property-first, with explicit rent/buy intent, city and keyword at the homepage search. Treat Ibadan, Lagos, and Abuja as equal entry points, and keep vehicles visually secondary. Use editorial spacing, a restrained Evergreen green/ivory palette with a lively citrus accent, prominent property imagery, grouped result filters and persistent applied-filter controls. Reference property portals for interaction patterns only; all content and visual identity remain specific to Evergreen and realtor-approved data.
 
+## Browse-first listing discovery
+The homepage and an unfiltered properties page render available collections from live inventory: realtor-featured listings, recent listings, then city-specific groups for Ibadan, Lagos, and Abuja. A submitted filter or search term switches the properties page to a single matching-results view. Vehicles remain a separate route and show the available vehicle inventory by default, with filters narrowing it. Do not claim “popular” based on guesswork: contact-event records are private to authenticated admins, and no public-safe popularity aggregate currently exists. Hide empty collections instead of suggesting inventory exists.
+
 ## Minimal listing publication
 Admin can publish with a title and one cover photo. Description, price, location, category-specific facts, availability confirmation, and fee information can be added later. The database remains the authority for this rule; a new migration replaces the earlier readiness gate and makes blank property/vehicle facts valid. Public views use “Price on request”, “Location available on request”, and the existing unconfirmed availability copy instead of inventing missing details. A generic “Listing photo” alt value is used only when an uploader leaves the optional description blank.
 
 ## Vehicle reference catalog
 Use NHTSA vPIC for live make/model suggestions across its passenger-car, truck, bus, MPV, and motorcycle data. Keep free-text entry because vPIC is a manufacturer-submitted safety catalog, not a complete global catalogue. Include manufacturer-sourced Innoson suggestions locally. Reference data never creates public stock or represents availability; each actual vehicle listing still requires admin entry. Details and source limitations are in `docs/VEHICLE_CATALOG.md`.
+
+## Admin account registration
+Do not grant admin role to public signups. Existing admins can create one-time, seven-day invitations bound to an email address; the Auth user trigger consumes the invite and creates the admin profile. The invitation link is displayed once for the admin to share. This avoids adding an email delivery integration or a public privilege escalation path.

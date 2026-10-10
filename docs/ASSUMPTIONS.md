@@ -20,6 +20,8 @@ These defaults follow Appendix A of the execution kit. Replace them only with re
 | Service region | Ibadan, Lagos, and Abuja | These are the business's stated service cities; no coverage beyond them is implied. |
 | Demo records | Three fictional property examples, one per service city | They are visibly labeled, have no price or availability claim, cannot receive enquiries, and use generic illustrative stock photos. |
 | Minimal listing publication | Listing title and one photo | Price, location, descriptive copy, subtype facts, availability confirmation, and fees are optional. Missing data is shown as unavailable/on request and is never inferred. |
+| Admin registration | Admin-generated, single-use invitations | Open signup must never grant admin privileges; invitations are email-bound and expire after seven days. |
+| Public listing discovery | Featured listings require the realtor's featured flag; recent and city collections use published inventory | Do not label listings “popular” until there is a suitable public-safe ranking signal. Empty collections stay hidden. |
 
 ## Missing intake
 Brand/logo, realtor name and portrait, verified contact numbers/email, specific coverage locations within the stated cities, fee policy, approved safety tips, privacy contact/legal copy, real listing data/photos, hosting owner, and notification recipient are not supplied. These remain settings or launch tasks. Demo records are not a substitute for approved real inventory.

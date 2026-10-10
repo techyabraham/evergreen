@@ -1,5 +1,5 @@
 'use server';
-import { randomUUID } from 'node:crypto';
+import { createHash,randomBytes,randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {revalidatePath} from 'next/cache';
@@ -14,6 +14,37 @@ import {slugPart} from '@/lib/domain/slug';
 
 export async function signIn(form:FormData){const supabase=await createClient();if(!supabase)redirect('/admin/login?error=configuration');const email=String(form.get('email')||'');const password=String(form.get('password')||'');const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error||!data.user)redirect('/admin/login?error=credentials');const {data:profile}=await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle();if(profile?.role!=='admin'){await supabase.auth.signOut();redirect('/admin/login?error=unauthorized');}redirect('/admin');}
 export async function signOut(){const {supabase}=await requireAdmin();await supabase.auth.signOut();redirect('/admin/login');}
+
+export type AdminInviteState={error?:'invalid'|'save';inviteToken?:string;email?:string};
+export async function createAdminInvite(_previous:AdminInviteState,form:FormData):Promise<AdminInviteState>{
+ const {supabase,user}=await requireAdmin();const email=String(form.get('email')||'').trim().toLowerCase();
+ if(!z.string().email().max(254).safeParse(email).success)return {error:'invalid'};
+ const token=randomBytes(32).toString('base64url');const tokenHash=createHash('sha256').update(token).digest('hex');
+ const {error}=await supabase.from('admin_invites').insert({email,token_hash:tokenHash,created_by:user.id,expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
+ if(error)return {error:'save'};
+ return {inviteToken:token,email};
+}
+
+export async function registerAdmin(_previous:AdminInviteState,form:FormData):Promise<AdminInviteState>{
+ const email=String(form.get('email')||'').trim().toLowerCase();const password=String(form.get('password')||'');const token=String(form.get('invite')||'').trim();
+ if(!z.string().email().max(254).safeParse(email).success||password.length<12||password.length>128||!/^[A-Za-z0-9_-]{40,60}$/.test(token))return {error:'invalid'};
+ const supabase=await createClient();if(!supabase)redirect('/admin/register?error=configuration');
+ const inviteHash=createHash('sha256').update(token).digest('hex');const siteUrl=process.env.NEXT_PUBLIC_SITE_URL||(process.env.NODE_ENV==='development'?'http://localhost:3000':'');
+ if(!siteUrl)redirect('/admin/register?error=configuration');
+ const {data:inviteValid,error:inviteError}=await supabase.rpc('check_admin_invite',{p_email:email,p_token_hash:inviteHash});
+ if(inviteError||inviteValid!==true)return {error:'invalid'};
+ const {data,error}=await supabase.auth.signUp({email,password,options:{data:{evergreen_admin_invite_hash:inviteHash},emailRedirectTo:new URL('/auth/callback?next=/admin',siteUrl).toString()}});
+ if(error||!data.user)return {error:'invalid'};
+ if(data.session){const {data:profile}=await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle();if(profile?.role==='admin')redirect('/admin');return {error:'invalid'};}
+ redirect('/admin/login?registered=1');
+}
+
+function publicationErrorCode(message:string|undefined){
+ const value=(message||'').toLowerCase();
+ if(value.includes('add at least 3 photos')||value.includes('10 characters')||value.includes('80 characters')||value.includes('choose at least a city')||value.includes('confirm availability')||value.includes('required fees')||value.includes('complete make, model')||value.includes('bedroom count'))return 'publication-migration';
+ if(value.includes('published properties require property details')||value.includes('published vehicles require vehicle details'))return 'publication-details';
+ return 'readiness';
+}
 
 export async function submitEnquiry(form:FormData){
   if(form.get('website'))redirect('/contact?sent=1');
@@ -86,13 +117,13 @@ export async function submitPropertyRequest(form:FormData){
  const privateFields={listing_id:listingId,exact_address:x.exact_address||null,owner_name:x.owner_name||null,owner_phone:x.owner_phone||null,vin:x.vin||null,internal_notes:x.internal_notes||null,updated_at:new Date().toISOString()};
  const {error:privateError}=await supabase.from('listing_private').upsert(privateFields);if(privateError)redirect(`/admin/listings/${listingId}/edit?error=private`);
  const desiredStatus=x.status;const currentStatus=previous?.status||'draft';
- if(desiredStatus!==currentStatus){if(desiredStatus==='under_offer'&&currentStatus==='draft'){const first=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:'published',p_note:x.relist_note||null});if(first.error||!(first.data as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=readiness`);}
-  const {data:transition,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:desiredStatus,p_note:x.relist_note||null});if(error||!(transition as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=readiness`);
+ if(desiredStatus!==currentStatus){if(desiredStatus==='under_offer'&&currentStatus==='draft'){const first=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:'published',p_note:x.relist_note||null});if(first.error||!(first.data as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=${publicationErrorCode(first.error?.message)}`);}
+  const {data:transition,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:listingId,p_status:desiredStatus,p_note:x.relist_note||null});if(error||!(transition as {ok?:boolean}|null)?.ok)redirect(`/admin/listings/${listingId}/edit?error=${publicationErrorCode(error?.message)}`);
  }
  redirect(`/admin/listings/${listingId}/edit?saved=1${id?'':'#photos-heading'}`);
 }
 function money(value:string|undefined){if(!value)return null;const amount=Number(value);return Number.isFinite(amount)&&amount>=0?amount:null;}
-function combineMoney(first:string|undefined,second:string|undefined){const a=money(first),b=money(second);if(a===null&&b===null)return undefined;return String((a??0)+(b??0));}export async function setListingStatus(form:FormData){const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const status=String(form.get('status')||'');const note=String(form.get('note')||'').trim();if(!z.enum(['draft','published','under_offer','rented','sold','archived']).safeParse(status).success)redirect('/admin/listings?error=status');const {data,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:id,p_status:status,p_note:note||null});if(error||!(data as {ok?:boolean}|null)?.ok)redirect('/admin/listings?error=transition');redirect('/admin/listings?saved=1');}
+function combineMoney(first:string|undefined,second:string|undefined){const a=money(first),b=money(second);if(a===null&&b===null)return undefined;return String((a??0)+(b??0));}export async function setListingStatus(form:FormData){const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const status=String(form.get('status')||'');const note=String(form.get('note')||'').trim();if(!z.enum(['draft','published','under_offer','rented','sold','archived']).safeParse(status).success)redirect('/admin/listings?error=status');const {data,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:id,p_status:status,p_note:note||null});if(error||!(data as {ok?:boolean}|null)?.ok)redirect(`/admin/listings?error=${publicationErrorCode(error?.message)}`);redirect('/admin/listings?saved=1');}
 export async function uploadListingImages(form:FormData){
  const {supabase}=await requireAdmin();const id=String(form.get('id')||'');
  const display=form.get('display');const thumb=form.get('thumb');const altText=String(form.get('alt_text')||'').trim()||'Listing photo';const width=Number(form.get('width'));const height=Number(form.get('height'));const blurData=String(form.get('blur_data_url')||'');
