@@ -8,19 +8,20 @@ export function ListingFields({listing,property,vehicle,privateData,locations,ty
  const fees=new Map((listing?.listing_fees||[]).map(fee=>[fee.fee_type,fee]));
  const period=listing?.price_on_request?'price_on_request':listing?.price_period||(category==='vehicle'?'one_time':'year');
  return <form action={saveListing} className="listing-form">
+  <p className="notice">Quick publish needs a title and one photo. Price, location, description, property or vehicle facts, availability confirmation, fees, and photo description can be added later.</p>
   <input type="hidden" name="category" value={category}/>
   {listing&&<><input type="hidden" name="id" value={listing.id}/><input type="hidden" name="slug" value={listing.slug}/><input type="hidden" name="reference_code" value={listing.reference_code}/></>}
   <fieldset><legend>Essentials</legend>
    <div className="field"><label htmlFor="purpose">Purpose</label>{category==='vehicle'?<><input type="hidden" name="purpose" value="sale"/><p className="field-static">Vehicle · For sale</p></>:<select id="purpose" name="purpose" defaultValue={listing?.purpose||'rent'}><option value="rent">For rent</option><option value="sale">For sale</option>{shortLetEnabled&&<option value="short_let">Short let</option>}</select>}</div>
    <div className="field"><label htmlFor="title">Listing title</label><input id="title" name="title" required minLength={5} maxLength={140} defaultValue={listing?.title||''}/></div>
-   <div className="field"><label htmlFor="description">Description</label><textarea id="description" name="description" maxLength={5000} defaultValue={listing?.description||''}/></div>
-   <div className="field"><label htmlFor="price_amount">Price (NGN)</label><input id="price_amount" name="price_amount" type="number" min="0" step="1" defaultValue={listing?.price_amount??''}/></div>
+   <div className="field"><label htmlFor="description">Description <span className="muted">(optional)</span></label><textarea id="description" name="description" maxLength={5000} defaultValue={listing?.description||''}/></div>
+   <div className="field"><label htmlFor="price_amount">Price (NGN) <span className="muted">(optional)</span></label><input id="price_amount" name="price_amount" type="number" min="0" step="1" defaultValue={listing?.price_amount??''}/><small>Leave blank to show “Price on request”.</small></div>
    <div className="field"><label htmlFor="price_period">Price period</label><select id="price_period" name="price_period" defaultValue={period}><option value="price_on_request">Price on request</option>{category==='property'&&<><option value="year">Per year</option><option value="month">Per month</option><option value="day">Per night</option></>}<option value="one_time">One-time price</option></select></div>
-   <div className="field"><label htmlFor="location_id">City or neighbourhood</label><select id="location_id" name="location_id" defaultValue={listing?.location_id||''}><option value="">Choose an area</option>{locations.map(location=><option key={location.id} value={location.id}>{locationLabel(location)}</option>)}</select><small>Locations come from the admin locations list. Choose at least a city to publish.</small></div>
+   <div className="field"><label htmlFor="location_id">City or neighbourhood <span className="muted">(optional)</span></label><select id="location_id" name="location_id" defaultValue={listing?.location_id||''}><option value="">Choose an area</option>{locations.map(location=><option key={location.id} value={location.id}>{locationLabel(location)}</option>)}</select><small>Add a location when known.</small></div>
    <div className="field"><label htmlFor="public_location_label">Public location label (optional)</label><input id="public_location_label" name="public_location_label" maxLength={120} defaultValue={listing?.public_location_label||''} placeholder="Example: near the waterfront"/></div>
   </fieldset>
   {category==='property'&&<><fieldset><legend>Property details</legend>
-   <div className="field"><label htmlFor="property_type">Property type</label><select id="property_type" name="property_type" defaultValue={property?.property_type||''}><option value="">Choose a property type</option>{types.map(type=><option key={type.slug} value={type.slug}>{type.label}</option>)}</select></div>
+   <div className="field"><label htmlFor="property_type">Property type <span className="muted">(optional)</span></label><select id="property_type" name="property_type" defaultValue={property?.property_type||''}><option value="">Choose a property type</option>{types.map(type=><option key={type.slug} value={type.slug}>{type.label}</option>)}</select></div>
    <div className="field"><label htmlFor="bedrooms">Bedrooms</label><input id="bedrooms" name="bedrooms" type="number" min="0" max="30" defaultValue={property?.bedrooms??''}/></div>
    <div className="field"><label htmlFor="bathrooms">Bathrooms</label><input id="bathrooms" name="bathrooms" type="number" min="0" max="30" defaultValue={property?.bathrooms??''}/></div>
    <div className="field"><label htmlFor="furnishing">Furnishing</label><select id="furnishing" name="furnishing" defaultValue={property?.furnishing||''}><option value="">Unspecified</option><option value="furnished">Furnished</option><option value="semi_furnished">Semi-furnished</option><option value="unfurnished">Unfurnished</option></select></div>
@@ -34,11 +35,11 @@ export function ListingFields({listing,property,vehicle,privateData,locations,ty
    <FeeEditor id="caution_fee" label="Caution deposit" amount={property?.caution_fee} fee={fees.get('caution_deposit')} stateName="fee_caution_state"/>
    <FeeEditor id="service_charge" label="Service charge" amount={property?.service_charge} fee={fees.get('service_charge')} stateName="fee_service_state"/>
    <div className="field"><label htmlFor="fee_service_frequency">Service charge frequency</label><select id="fee_service_frequency" name="fee_service_frequency" defaultValue={fees.get('service_charge')?.frequency||'year'}><option value="year">Annual</option><option value="month">Monthly (excluded from upfront total)</option><option value="one_time">One-time</option></select></div>
-   <label className="consent"><input type="checkbox" name="fees_acknowledged" defaultChecked={Boolean(listing?.fees_ack_at)}/> Publish with unknown fees (confirm they are intentionally unknown)</label>
+   <p className="muted">Fees are optional. If you leave them blank, visitors will be asked to contact you for details.</p>
   </fieldset></>}
   {category==='vehicle'&&<fieldset><legend>Vehicle details</legend>
-   <div className="field"><label htmlFor="make">Make</label><input id="make" name="make" maxLength={60} defaultValue={vehicle?.make||''}/></div>
-   <div className="field"><label htmlFor="model">Model</label><input id="model" name="model" maxLength={60} defaultValue={vehicle?.model||''}/></div>
+   <div className="field"><label htmlFor="make">Make <span className="muted">(optional)</span></label><input id="make" name="make" maxLength={60} defaultValue={vehicle?.make||''}/></div>
+   <div className="field"><label htmlFor="model">Model <span className="muted">(optional)</span></label><input id="model" name="model" maxLength={60} defaultValue={vehicle?.model||''}/></div>
    <div className="field"><label htmlFor="year">Year</label><input id="year" name="year" type="number" min="1980" max={new Date().getFullYear()+1} defaultValue={vehicle?.year??''}/></div>
    <div className="field"><label htmlFor="mileage">Mileage</label><input id="mileage" name="mileage" type="number" min="0" defaultValue={vehicle?.mileage??''}/></div>
    <div className="field"><label htmlFor="condition">Condition</label><select id="condition" name="condition" defaultValue={vehicle?.condition||''}><option value="">Choose one</option><option value="new">New</option><option value="used">Used</option></select></div>

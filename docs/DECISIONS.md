@@ -25,3 +25,6 @@ Admin inventory is separated into property and vehicle workspaces. Creation star
 
 ## Public frontend direction
 Keep the consumer journey property-first, with explicit rent/buy intent, city and keyword at the homepage search. Treat Ibadan, Lagos, and Abuja as equal entry points, and keep vehicles visually secondary. Use editorial spacing, a restrained Evergreen green/ivory palette with a lively citrus accent, prominent property imagery, grouped result filters and persistent applied-filter controls. Reference property portals for interaction patterns only; all content and visual identity remain specific to Evergreen and realtor-approved data.
+
+## Minimal listing publication
+Admin can publish with a title and one cover photo. Description, price, location, category-specific facts, availability confirmation, and fee information can be added later. The database remains the authority for this rule; a new migration replaces the earlier readiness gate and makes blank property/vehicle facts valid. Public views use “Price on request”, “Location available on request”, and the existing unconfirmed availability copy instead of inventing missing details. A generic “Listing photo” alt value is used only when an uploader leaves the optional description blank.

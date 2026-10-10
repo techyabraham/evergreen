@@ -14,7 +14,7 @@
 - For a property request, contact the person using their selected channel and move the enquiry through New → Contacted → Inspection arranged → Closed (or Spam). CSV export is restricted to an admin session.
 - For a stale report, inspect the listing and reporter details. Confirm directly with the realtor; a visitor report does not automatically hide inventory.
 - Reconfirm listing status on the configured freshness interval; stale hiding is controlled in site settings.
-- To mark rented/sold, use the status control after confirming the transaction. To relist a closed record, return it to draft, enter a reason, reconfirm availability and republish after readiness checks.
+- To mark rented/sold, use the status control after confirming the transaction. To relist a closed record, return it to draft, enter a reason, then republish. Availability confirmation is optional for publication; only enter it after checking.
 - Purge leads only after confirming the retention policy with the privacy contact. Run the purge RPC first in dry-run mode, review the count, then use apply mode.
 - Add an area through Admin → Locations with the correct parent; do not add a duplicate slug under that parent.
 - To change WhatsApp, update Site settings with a verified international or Nigerian number, save, then test both the public CTA and a real phone.

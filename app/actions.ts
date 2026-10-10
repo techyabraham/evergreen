@@ -50,9 +50,7 @@ export async function submitPropertyRequest(form:FormData){
  const x=parsed.data;const {data:settings}=await supabase.from('site_settings').select('short_let_enabled').eq('id',true).maybeSingle();
  if(x.purpose==='short_let'&&!settings?.short_let_enabled)redirect(editorError('short-let-disabled'));
  if(x.category==='vehicle'&&x.purpose!=='sale')redirect(editorError('vehicle-purpose'));
- if(x.category==='vehicle'&&(!x.make||!x.model))redirect(editorError('vehicle-fields'));
- if(x.category==='property'&&!x.property_type)redirect(editorError('property-fields'));
- const onRequest=x.price_period==='price_on_request';const price=onRequest?null:Number(x.price_amount);
+ const onRequest=x.price_period==='price_on_request'||!x.price_amount;const price=onRequest?null:Number(x.price_amount);
  if(!onRequest&&(price===null||!Number.isFinite(price)||price<=0))redirect(editorError('price'));
  const {data:previous}=id?await supabase.from('listings').select('id,category,status,published_at,reference_code,slug').eq('id',id).maybeSingle():{data:null};
  if(id&&!previous)redirect('/admin/listings?error=missing');
@@ -69,7 +67,7 @@ export async function submitPropertyRequest(form:FormData){
   await supabase.from('vehicle_details').delete().eq('listing_id',listingId);
   const amenities=(x.amenities||'').split(',').map(value=>value.trim().toLowerCase().replaceAll(' ','_')).filter(value=>['gated_estate','security_24h','cctv','security_doors','perimeter_fence','prepaid_meter','standby_generator','solar_inverter','borehole_water','water_treatment','fast_internet','street_lights','drainage_system','all_rooms_ensuite','pop_ceiling','fitted_kitchen','fitted_wardrobes','fitted_ac','tiled_floors','balcony','big_compound','swimming_pool','gym','elevator','garden','parking_space','supermarket_nearby','good_road_access','near_public_transport','school_nearby'].includes(value));
   const furnishing=x.furnishing?.toLowerCase().replaceAll('-','_').replaceAll(' ','_')||null;
-  const details={listing_id:listingId,property_type:x.property_type,bedrooms:x.bedrooms?Number(x.bedrooms):null,bathrooms:x.bathrooms?Number(x.bathrooms):null,agent_fee:money(x.agent_fee),agreement_fee:money(x.agreement_fee),legal_fee:money(x.legal_fee),caution_fee:money(x.caution_fee),service_charge:money(x.service_charge),rent_payment_frequency:x.rent_payment_frequency||null,furnishing,amenities,advance_rent_months:x.advance_rent_months?Number(x.advance_rent_months):null,title_type:x.title_type||null};
+  const details={listing_id:listingId,property_type:x.property_type||null,bedrooms:x.bedrooms?Number(x.bedrooms):null,bathrooms:x.bathrooms?Number(x.bathrooms):null,agent_fee:money(x.agent_fee),agreement_fee:money(x.agreement_fee),legal_fee:money(x.legal_fee),caution_fee:money(x.caution_fee),service_charge:money(x.service_charge),rent_payment_frequency:x.rent_payment_frequency||null,furnishing,amenities,advance_rent_months:x.advance_rent_months?Number(x.advance_rent_months):null,title_type:x.title_type||null};
   const {error}=await supabase.from('property_details').upsert(details);if(error)redirect(`/admin/listings/${listingId}/edit?error=details`);
   await supabase.from('listing_fees').delete().eq('listing_id',listingId);
   if(x.purpose==='rent'||x.purpose==='short_let'){
@@ -82,7 +80,7 @@ export async function submitPropertyRequest(form:FormData){
   await supabase.from('property_details').delete().eq('listing_id',listingId);await supabase.from('listing_fees').delete().eq('listing_id',listingId);
   const condition=x.condition?.toLowerCase().includes('new')?'new':x.condition?'used':null;
   const importStatus=x.import_status?.toLowerCase().includes('foreign')?'foreign_used':x.import_status?.toLowerCase().includes('nigerian')?'nigerian_used':x.import_status?'brand_new':null;
-  const details={listing_id:listingId,make:x.make,model:x.model,year:x.year?Number(x.year):null,mileage:x.mileage?Number(x.mileage):null,mileage_unit:x.mileage?'km':null,condition,import_status:importStatus,transmission:x.transmission?.toLowerCase()||null,fuel_type:x.fuel_type?.toLowerCase()||null,colour:x.colour||null};
+  const details={listing_id:listingId,make:x.make||null,model:x.model||null,year:x.year?Number(x.year):null,mileage:x.mileage?Number(x.mileage):null,mileage_unit:x.mileage?'km':null,condition,import_status:importStatus,transmission:x.transmission?.toLowerCase()||null,fuel_type:x.fuel_type?.toLowerCase()||null,colour:x.colour||null};
  const {error}=await supabase.from('vehicle_details').upsert(details);if(error)redirect(`/admin/listings/${listingId}/edit?error=details`);
  }
  const privateFields={listing_id:listingId,exact_address:x.exact_address||null,owner_name:x.owner_name||null,owner_phone:x.owner_phone||null,vin:x.vin||null,internal_notes:x.internal_notes||null,updated_at:new Date().toISOString()};
@@ -97,9 +95,9 @@ function money(value:string|undefined){if(!value)return null;const amount=Number
 function combineMoney(first:string|undefined,second:string|undefined){const a=money(first),b=money(second);if(a===null&&b===null)return undefined;return String((a??0)+(b??0));}export async function setListingStatus(form:FormData){const {supabase}=await requireAdmin();const id=String(form.get('id')||'');const status=String(form.get('status')||'');const note=String(form.get('note')||'').trim();if(!z.enum(['draft','published','under_offer','rented','sold','archived']).safeParse(status).success)redirect('/admin/listings?error=status');const {data,error}=await supabase.rpc('admin_transition_listing',{p_listing_id:id,p_status:status,p_note:note||null});if(error||!(data as {ok?:boolean}|null)?.ok)redirect('/admin/listings?error=transition');redirect('/admin/listings?saved=1');}
 export async function uploadListingImages(form:FormData){
  const {supabase}=await requireAdmin();const id=String(form.get('id')||'');
- const display=form.get('display');const thumb=form.get('thumb');const altText=String(form.get('alt_text')||'').trim();const width=Number(form.get('width'));const height=Number(form.get('height'));const blurData=String(form.get('blur_data_url')||'');
+ const display=form.get('display');const thumb=form.get('thumb');const altText=String(form.get('alt_text')||'').trim()||'Listing photo';const width=Number(form.get('width'));const height=Number(form.get('height'));const blurData=String(form.get('blur_data_url')||'');
  if(!z.string().uuid().safeParse(id).success)return {ok:false,error:'photo-rules'};
- if(!(display instanceof File)||!(thumb instanceof File)||display.size===0||thumb.size===0||!altText||altText.length>200||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>10000||height>10000||!blurData.startsWith('data:image/')||blurData.length>2048)return {ok:false,error:'photo-rules'};
+ if(!(display instanceof File)||!(thumb instanceof File)||display.size===0||thumb.size===0||altText.length>200||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>10000||height>10000||!blurData.startsWith('data:image/')||blurData.length>2048)return {ok:false,error:'photo-rules'};
  if(display.size>2*1024*1024||thumb.size>2*1024*1024||!['image/webp','image/jpeg','image/png'].includes(display.type)||display.type!==thumb.type)return {ok:false,error:'photo-rules'};
  const checkSignature=async(file:File)=>{const bytes=new Uint8Array(await file.slice(0,12).arrayBuffer());return file.type==='image/jpeg'?bytes[0]===255&&bytes[1]===216&&bytes[2]===255:file.type==='image/png'?bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71:file.type==='image/webp'?String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP':false;};
  if(!(await checkSignature(display))||!(await checkSignature(thumb)))return {ok:false,error:'photo-rules'};

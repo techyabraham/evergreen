@@ -25,12 +25,10 @@ export const listingInputSchema=z.object({
   fee_agency_state:z.enum(['known','not_applicable','unknown']).optional(),fee_agreement_legal_state:z.enum(['known','not_applicable','unknown']).optional(),fee_caution_state:z.enum(['known','not_applicable','unknown']).optional(),fee_service_state:z.enum(['known','not_applicable','unknown']).optional(),fee_service_frequency:z.enum(['one_time','year','month']).optional(),fees_acknowledged:z.enum(['on','yes']).optional(),relist_note:optionalText(500),advance_rent_months:optionalInteger(2),exact_address:optionalText(240),owner_name:optionalText(120),owner_phone:optionalText(32),vin:optionalText(40),internal_notes:optionalText(2000),title_type:optionalText(40),
 }).superRefine((value,ctx)=>{
   if(value.category==='vehicle'&&value.purpose!=='sale')ctx.addIssue({code:'custom',path:['purpose'],message:'Vehicles can only be listed for sale.'});
-  if(value.category==='vehicle'&&(!value.make||!value.model))ctx.addIssue({code:'custom',path:['make'],message:'Vehicle make and model are required.'});
-  if(value.category==='property'&&!value.property_type)ctx.addIssue({code:'custom',path:['property_type'],message:'Property type is required.'});
-  if(value.price_period!=='price_on_request'&&!value.price_amount)ctx.addIssue({code:'custom',path:['price_amount'],message:'Enter a price or choose price on request.'});
-  if(value.purpose==='rent'&&value.price_period!=='price_on_request'&&!['year','month'].includes(value.price_period))ctx.addIssue({code:'custom',path:['price_period'],message:'Rent must be priced per year or month.'});
-  if(value.purpose==='short_let'&&value.price_period!=='price_on_request'&&value.price_period!=='day')ctx.addIssue({code:'custom',path:['price_period'],message:'Short let must be priced per night.'});
-  if(value.purpose==='sale'&&value.price_period!=='price_on_request'&&value.price_period!=='one_time')ctx.addIssue({code:'custom',path:['price_period'],message:'Sale price must be one-time.'});
+  // Price and category-specific facts are optional. Empty price is saved as “on request”.
+  if(value.price_amount&&value.purpose==='rent'&&value.price_period!=='price_on_request'&&!['year','month'].includes(value.price_period))ctx.addIssue({code:'custom',path:['price_period'],message:'Rent must be priced per year or month.'});
+  if(value.price_amount&&value.purpose==='short_let'&&value.price_period!=='price_on_request'&&value.price_period!=='day')ctx.addIssue({code:'custom',path:['price_period'],message:'Short let must be priced per night.'});
+  if(value.price_amount&&value.purpose==='sale'&&value.price_period!=='price_on_request'&&value.price_period!=='one_time')ctx.addIssue({code:'custom',path:['price_period'],message:'Sale price must be one-time.'});
   if(value.category==='vehicle'&&value.year&&Number(value.year)<1900)ctx.addIssue({code:'custom',path:['year'],message:'Enter a valid vehicle year.'});
   for(const field of ['bedrooms','bathrooms'] as const){if(value[field]&&Number(value[field])>100)ctx.addIssue({code:'custom',path:[field],message:'Enter a value between 0 and 100.'});}
   if(value.mileage&&Number(value.mileage)>2_147_483_647)ctx.addIssue({code:'custom',path:['mileage'],message:'Enter a valid mileage.'});

@@ -17,6 +17,7 @@ Upgrade the existing single-realtor Next.js/Supabase app to the attached Realtor
 - [ ] M10 — Run available gates, self-audit, docs, and launch handoff.
 
 ## Progress log
+- 2026-10-10 — Relaxed listing publication: a title and one cover photo are sufficient; price, location, descriptive copy, subtype facts, availability confirmation, fees, and photo description are optional. Added migration `202610100001_minimal_listing_publication.sql`; it has not been applied remotely. Public pages use explicit “on request”/unknown wording for missing facts. Typecheck, targeted lint, and production build pass; tests and remote database migration were not run.
 - 2026-10-07 — M0 inspected the clean initial commit. Existing app uses Next 16.4, React 19, Supabase SSR, Supabase JS, Zod and Vitest. Baseline checks are recorded below. Keep-and-extend selected; no real inventory or credentials were present.
 - 2026-10-07 — M1 foundation and the core M2–M9 code paths implemented: scripts/CI, nonce CSP, responsive shell, v3 migration/RPCs/RLS, domain helpers, public routes/forms, admin tools, share cards, CSV export and first-party analytics. Several milestone acceptance items remain incomplete or unverified; see the current state below.
 - 2026-10-07 — Corrected the v3 location seed SQL after the owner reported a duplicate table alias and invalid value-column references. After the owner reported a second hosted SQL error, made the `price_period` conversion drop and recreate the dependent generated `sort_price` column in the right order. The owner later reported that the v3 migration applied successfully; it was not independently verified here.
@@ -38,7 +39,7 @@ Upgrade the existing single-realtor Next.js/Supabase app to the attached Realtor
 2. No realtor intake: identity, contacts, locations, fee policy, safety copy and inventory remain unset.
 3. v3 database contract is a major schema change; migration must be reviewed/applied to a development project first.
 4. Service-role RPC path is security-sensitive; key must remain server-only and use limited RPCs.
-5. Staleness and publish readiness can hide/deny listings if intake is incomplete; defaults and issue messages must be explicit.
+5. Staleness can hide listings when auto-hide is enabled; publication requires a title and one accurately cover-marked photo.
 6. Image conversion relies on browser codec support; HEIC conversion is not guaranteed in every browser.
 7. RPC rate limits need DB-side enforcement and realistic concurrency tests.
 8. No local Supabase CLI/Docker/database may be available; SQL gates may be NOT EXECUTED.
@@ -51,7 +52,7 @@ Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. Run `n
 ## Current implementation and verification state
 
 - M1: implementation complete. Browser smoke verified on a dedicated local port; one axe check covers home, request and safety pages. Mobile overflow checked at 320, 375, 768 and 1280 px. Broader keyboard/visual review remains.
-- M2: v3 migration, policy changes, RPCs, reference data and pgTAP smoke tests are written. The owner reported that v3 applied to the linked project. A separate demo-content migration and UI labeling are written but not applied; that migration requires an existing admin profile. No database operation was run here. A working local Supabase/Docker database is unavailable for verification. Generated database types are still mostly from the pre-v3 schema.
+- M2: v3 migration, policy changes, RPCs, reference data and pgTAP smoke tests are written. The owner reported that v3 applied to the linked project. Follow-up migrations for demo content and minimal listing publication are written but not applied. No database operation was run here. A working local Supabase/Docker database is unavailable for verification. Generated database types are still mostly from the pre-v3 schema.
 - M3–M9: major pieces are implemented, but each has remaining acceptance gaps: domain coverage is not measured at 90%; the app currently queries public tables directly rather than routing all search through the SQL functions; Turnstile and Resend are env placeholders only; no Quick Post/autosave/duplicate flow; no full admin/data-backed E2E suite; no Lighthouse run; admin RLS and storage behavior are unverified.
 - M10: available gates and the implementation self-audit are recorded below. Database, generated types, migration replay, hosted staging, Lighthouse and authenticated admin E2E remain manual gates.
 
