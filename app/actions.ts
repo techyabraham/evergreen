@@ -15,7 +15,7 @@ import {slugPart} from '@/lib/domain/slug';
 export async function signIn(form:FormData){const supabase=await createClient();if(!supabase)redirect('/admin/login?error=configuration');const email=String(form.get('email')||'');const password=String(form.get('password')||'');const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error||!data.user)redirect('/admin/login?error=credentials');const {data:profile}=await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle();if(profile?.role!=='admin'){await supabase.auth.signOut();redirect('/admin/login?error=unauthorized');}redirect('/admin');}
 export async function signOut(){const {supabase}=await requireAdmin();await supabase.auth.signOut();redirect('/admin/login');}
 
-export type AdminInviteState={error?:'invalid'|'save';inviteToken?:string;email?:string};
+export type AdminInviteState={error?:'invalid'|'save'|'email'|'password'|'service'|'signup'|'account-exists'|'profile';inviteToken?:string;email?:string};
 export async function createAdminInvite(_previous:AdminInviteState,form:FormData):Promise<AdminInviteState>{
  const {supabase,user}=await requireAdmin();const email=String(form.get('email')||'').trim().toLowerCase();
  if(!z.string().email().max(254).safeParse(email).success)return {error:'invalid'};
@@ -27,15 +27,19 @@ export async function createAdminInvite(_previous:AdminInviteState,form:FormData
 
 export async function registerAdmin(_previous:AdminInviteState,form:FormData):Promise<AdminInviteState>{
  const email=String(form.get('email')||'').trim().toLowerCase();const password=String(form.get('password')||'');const token=String(form.get('invite')||'').trim();
- if(!z.string().email().max(254).safeParse(email).success||password.length<12||password.length>128||!/^[A-Za-z0-9_-]{40,60}$/.test(token))return {error:'invalid'};
+ if(!z.string().email().max(254).safeParse(email).success)return {error:'email'};
+ if(password.length<12||password.length>128)return {error:'password'};
+ if(!/^[A-Za-z0-9_-]{40,60}$/.test(token))return {error:'invalid'};
  const supabase=await createClient();if(!supabase)redirect('/admin/register?error=configuration');
  const inviteHash=createHash('sha256').update(token).digest('hex');const siteUrl=process.env.NEXT_PUBLIC_SITE_URL||(process.env.NODE_ENV==='development'?'http://localhost:3000':'');
  if(!siteUrl)redirect('/admin/register?error=configuration');
  const {data:inviteValid,error:inviteError}=await supabase.rpc('check_admin_invite',{p_email:email,p_token_hash:inviteHash});
- if(inviteError||inviteValid!==true)return {error:'invalid'};
+ if(inviteError)return {error:'service'};
+ if(inviteValid!==true)return {error:'invalid'};
  const {data,error}=await supabase.auth.signUp({email,password,options:{data:{evergreen_admin_invite_hash:inviteHash},emailRedirectTo:new URL('/auth/callback?next=/admin',siteUrl).toString()}});
- if(error||!data.user)return {error:'invalid'};
- if(data.session){const {data:profile}=await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle();if(profile?.role==='admin')redirect('/admin');return {error:'invalid'};}
+ if(error?.code==='user_already_exists'||data.user?.identities?.length===0)return {error:'account-exists'};
+ if(error||!data.user)return {error:'signup'};
+ if(data.session){const {data:profile,error:profileError}=await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle();if(profile?.role==='admin')redirect('/admin');if(profileError)return {error:'service'};return {error:'profile'};}
  redirect('/admin/login?registered=1');
 }
 

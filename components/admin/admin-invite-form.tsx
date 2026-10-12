@@ -7,7 +7,7 @@ const initialState:AdminInviteState={};
 
 export function AdminInviteForm(){
  const [state,action,pending]=useActionState(createAdminInvite,initialState);const [copied,setCopied]=useState(false);
- const link=state.inviteToken?`/admin/register#invite=${encodeURIComponent(state.inviteToken)}`:'';
+ const link=state.inviteToken?`/admin/register#invite=${encodeURIComponent(state.inviteToken)}&email=${encodeURIComponent(state.email||'')}`:'';
  async function copyLink(){if(!link)return;await navigator.clipboard.writeText(`${window.location.origin}${link}`);setCopied(true);}
  return <section className="admin-invite-panel"><h2>Invite an admin</h2><p>Only the invited email can use the link. It expires in seven days and works once.</p>
   <form action={action} className="listing-form"><div className="field"><label htmlFor="invite-email">New admin’s email</label><input id="invite-email" name="email" type="email" maxLength={254} required autoComplete="email"/></div><button className="button" disabled={pending}>{pending?'Creating invitation…':'Create invitation'}</button></form>

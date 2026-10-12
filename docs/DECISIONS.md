@@ -40,3 +40,6 @@ Use NHTSA vPIC for live make/model suggestions across its passenger-car, truck, 
 
 ## Admin account registration
 Do not grant admin role to public signups. Existing admins can create one-time, seven-day invitations bound to an email address; the Auth user trigger consumes the invite and creates the admin profile. The invitation link is displayed once for the admin to share. This avoids adding an email delivery integration or a public privilege escalation path.
+
+## Admin invitation failures
+Keep the database RPC as the authority for invite validity. The registration UI must distinguish invalid/expired/used/mismatched invitations from malformed input, Auth service failures, duplicate accounts, and profile-trigger problems so users get a safe, actionable recovery path without exposing backend internals. New invite links carry the inviter-entered email in the URL fragment and prefill it as read-only; the server still verifies the token/email pair.
