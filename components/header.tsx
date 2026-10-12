@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { MobileNavigation } from '@/components/mobile-navigation';
 
-const links = [
+const links: [string, string][] = [
   ['Rent', '/property-for-rent'],
   ['Buy', '/property-for-sale'],
   ['Recently closed', '/recently-closed'],
@@ -20,7 +21,7 @@ function BrandLogo({ footer = false }: { footer?: boolean }) {
         alt={businessName}
         width={2172}
         height={724}
-        priority={!footer}
+        loading={footer ? 'lazy' : 'eager'}
       />
     </Link>
   );
@@ -33,12 +34,7 @@ export function Header() {
       <nav className="desktop-nav" aria-label="Main navigation">
         {links.map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}
       </nav>
-      <details className="mobile-menu">
-        <summary aria-label="Open navigation">Menu</summary>
-        <nav aria-label="Mobile main navigation">
-          {links.map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}
-        </nav>
-      </details>
+      <MobileNavigation links={links} />
       <Link className="nav-cta" href="/request">Get matched <span aria-hidden="true">↗</span></Link>
     </header>
   );

@@ -16,7 +16,7 @@ export function ListingCard({listing,priority=false}:{listing:Listing;priority?:
  const price=formatPrice({amount:listing.price_amount==null?null:Number(listing.price_amount),period:listing.price_period as 'year'|'month'|'day'|'one_time'|null,onRequest:listing.price_on_request,purpose:listing.purpose});
  const confirmed=listing.is_demo?null:freshness({lastConfirmedAt:listing.last_confirmed_at,staleAfterDays:14});const status=listing.status==='under_offer'?'Under offer':listing.status==='rented'?'Rented':listing.status==='sold'?'Sold':null;
  return <article className="card"><Link className="card-image" href={href} aria-label={`View ${listing.title}`}>
-  {photo?<Image src={photo} alt={cover?.alt_text||listing.title} loading={priority?'eager':'lazy'} priority={priority} width={cover?.width||1200} height={cover?.height||800} sizes="(max-width: 560px) 100vw, (max-width: 850px) 50vw, 33vw" unoptimized/>:<div className="image-placeholder" aria-label="No listing photo yet">Photos<br/>available on request</div>}
+  {photo?<Image src={photo} alt={cover?.alt_text||listing.title} loading={priority?'eager':'lazy'} width={cover?.width||1200} height={cover?.height||800} sizes="(max-width: 560px) 100vw, (max-width: 850px) 50vw, 33vw" unoptimized/>:<div className="image-placeholder" aria-label="No listing photo yet">Photos<br/>available on request</div>}
   {listing.is_demo&&<span className="demo-chip">DEMO · NOT REAL</span>}
   <span className="reference">{listing.reference_code}</span>{status&&<span className="status-chip">{status}</span>}
   {listing.listing_images&&listing.listing_images.length>1&&<span className="photo-count" aria-label={`${listing.listing_images.length} photos`}>{listing.listing_images.length} photos</span>}

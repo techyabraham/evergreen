@@ -29,6 +29,9 @@ Keep the consumer journey property-first, with explicit rent/buy intent, city an
 ## Browse-first listing discovery
 The homepage and an unfiltered properties page render available collections from live inventory: realtor-featured listings, recent listings, then city-specific groups for Ibadan, Lagos, and Abuja. A submitted filter or search term switches the properties page to a single matching-results view. Vehicles remain a separate route and show the available vehicle inventory by default, with filters narrowing it. Do not claim “popular” based on guesswork: contact-event records are private to authenticated admins, and no public-safe popularity aggregate currently exists. Hide empty collections instead of suggesting inventory exists.
 
+## Mobile and responsive behavior
+Treat phone layouts as a full responsive experience with unchanged content and task capability. Use a route-aware navigation, touch-sized controls, compact but legible search, snap-scrolling city/listing rows, a one-column result grid, complete swipeable photo galleries, and mobile-card admin inventory. Preserve keyboard access, semantic controls, browser zoom and reduced-motion support. Research sources and the local validation plan are in `docs/MOBILE_RESEARCH.md`.
+
 ## Minimal listing publication
 Admin can publish with a title and one cover photo. Description, price, location, category-specific facts, availability confirmation, and fee information can be added later. The database remains the authority for this rule; a new migration replaces the earlier readiness gate and makes blank property/vehicle facts valid. Public views use “Price on request”, “Location available on request”, and the existing unconfirmed availability copy instead of inventing missing details. A generic “Listing photo” alt value is used only when an uploader leaves the optional description blank.
 

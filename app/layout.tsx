@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BrandLogo, Header } from '@/components/header';
 import './globals.css';
 import './admin/admin.css';
+import './mobile.css';
 
 const businessName = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Evergreen Global Properties';
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <Header />

@@ -66,7 +66,8 @@ export default async function Home() {
               src="/property-hero.jpg"
               alt="Contemporary architecture framed by mature trees at dusk"
               fill
-              priority
+              loading="eager"
+              fetchPriority="high"
               sizes="(max-width: 900px) 100vw, 52vw"
             />
             <div className="hero-image-wash" />
