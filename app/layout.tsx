@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BrandLogo, Header } from '@/components/header';
+import { BusinessContactOptions } from '@/components/business-contact-options';
+import { WhatsAppLiveChat } from '@/components/whatsapp-live-chat';
 import './globals.css';
 import './admin/admin.css';
 import './mobile.css';
@@ -22,13 +24,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main id="main-content">{children}</main>
         <footer className="site-footer">
           <BrandLogo footer />
-          <div>
+          <nav className="footer-links" aria-label="Footer">
             <Link href="/privacy">Privacy</Link>
             <Link href="/contact">Contact</Link>
             <Link href="/admin/login">Admin</Link>
-          </div>
+          </nav>
+          <section className="footer-contact" aria-label="Contact Evergreen Global Properties">
+            <p>Speak directly with Evergreen</p>
+            <BusinessContactOptions />
+          </section>
           <small>Listing details are provided by the realtor. Please confirm availability and all fees before proceeding.</small>
         </footer>
+        <WhatsAppLiveChat />
       </body>
     </html>
   );

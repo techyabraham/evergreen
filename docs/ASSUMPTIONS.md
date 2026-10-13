@@ -25,4 +25,4 @@ These defaults follow Appendix A of the execution kit. Replace them only with re
 | Mobile primary controls | Target 48 CSS px minimum for main touch controls | WCAG 2.2 AA permits 24px targets with spacing exceptions; Evergreen aims for larger touch controls on mobile. |
 
 ## Missing intake
-Brand/logo, realtor name and portrait, verified contact numbers/email, specific coverage locations within the stated cities, fee policy, approved safety tips, privacy contact/legal copy, real listing data/photos, hosting owner, and notification recipient are not supplied. These remain settings or launch tasks. Demo records are not a substitute for approved real inventory.
+Brand/logo, realtor name and portrait, verified email, specific coverage locations within the stated cities, fee policy, approved safety tips, privacy contact/legal copy, real listing data/photos, hosting owner, and notification recipient are not supplied. These remain settings or launch tasks. The owner supplied the public call/WhatsApp lines 07086659178 and 07032487829 for display on the site. Demo records are not a substitute for approved real inventory.

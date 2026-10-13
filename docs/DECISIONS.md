@@ -43,3 +43,6 @@ Do not grant admin role to public signups. Existing admins can create one-time, 
 
 ## Admin invitation failures
 Keep the database RPC as the authority for invite validity. The registration UI must distinguish invalid/expired/used/mismatched invitations from malformed input, Auth service failures, duplicate accounts, and profile-trigger problems so users get a safe, actionable recovery path without exposing backend internals. New invite links carry the inviter-entered email in the URL fragment and prefill it as read-only; the server still verifies the token/email pair.
+
+## Public About and contact presentation
+Use the owner-provided About copy as the page's core message, with clear visual sections for services, values, and a direct-contact close. Display the owner-provided Nigerian contact lines `07086659178` and `07032487829` as tap-to-call links and WhatsApp chat links in the About page, contact page, footer, and listing enquiry cards. Use `+234` E.164 links for calling and WhatsApp's country-code format for `wa.me`. The floating WhatsApp control offers both lines and is hidden in admin routes. It opens WhatsApp; it does not claim an agent is online. Demo listings keep enquiries disabled.

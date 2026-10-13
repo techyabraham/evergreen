@@ -19,7 +19,7 @@ export const listingInputSchema=z.object({
   price_amount:optionalMoney,price_period:z.enum(['year','month','day','one_time','price_on_request']),state:optionalText(80),city:optionalText(80),area:optionalText(100),
   location_id:z.union([z.literal(''),z.string().uuid()]).optional(),public_location_label:optionalText(120),
   status:z.enum(['draft','published','under_offer','rented','sold','archived']),last_confirmed_at:optionalText(40),property_type:optionalText(80),
-  bedrooms:optionalInteger(3),bathrooms:optionalInteger(3),agent_fee:optionalMoney,agreement_fee:optionalMoney,legal_fee:optionalMoney,caution_fee:optionalMoney,service_charge:optionalMoney,
+  bedrooms:optionalInteger(3),bathrooms:optionalInteger(3),toilets:optionalInteger(3),agent_fee:optionalMoney,agreement_fee:optionalMoney,legal_fee:optionalMoney,caution_fee:optionalMoney,service_charge:optionalMoney,
   rent_payment_frequency:optionalText(40),furnishing:optionalText(40),amenities:optionalText(300),make:optionalText(60),model:optionalText(60),year:optionalInteger(4),mileage:optionalInteger(10),
   condition:optionalText(40),import_status:optionalText(40),transmission:optionalText(40),fuel_type:optionalText(40),colour:optionalText(40),vehicle_class:z.union([z.literal(''),z.enum(['car','suv','truck','bus','van','motorcycle','tricycle','commercial','other'])]).optional(),
   fee_agency_state:z.enum(['known','not_applicable','unknown']).optional(),fee_agreement_legal_state:z.enum(['known','not_applicable','unknown']).optional(),fee_caution_state:z.enum(['known','not_applicable','unknown']).optional(),fee_service_state:z.enum(['known','not_applicable','unknown']).optional(),fee_service_frequency:z.enum(['one_time','year','month']).optional(),fees_acknowledged:z.enum(['on','yes']).optional(),relist_note:optionalText(500),advance_rent_months:optionalInteger(2),exact_address:optionalText(240),owner_name:optionalText(120),owner_phone:optionalText(32),vin:optionalText(40),internal_notes:optionalText(2000),title_type:optionalText(40),
@@ -30,7 +30,7 @@ export const listingInputSchema=z.object({
   if(value.price_amount&&value.purpose==='short_let'&&value.price_period!=='price_on_request'&&value.price_period!=='day')ctx.addIssue({code:'custom',path:['price_period'],message:'Short let must be priced per night.'});
   if(value.price_amount&&value.purpose==='sale'&&value.price_period!=='price_on_request'&&value.price_period!=='one_time')ctx.addIssue({code:'custom',path:['price_period'],message:'Sale price must be one-time.'});
   if(value.category==='vehicle'&&value.year&&Number(value.year)<1900)ctx.addIssue({code:'custom',path:['year'],message:'Enter a valid vehicle year.'});
-  for(const field of ['bedrooms','bathrooms'] as const){if(value[field]&&Number(value[field])>100)ctx.addIssue({code:'custom',path:[field],message:'Enter a value between 0 and 100.'});}
+  for(const field of ['bedrooms','bathrooms','toilets'] as const){if(value[field]&&Number(value[field])>100)ctx.addIssue({code:'custom',path:[field],message:'Enter a value between 0 and 100.'});}
   if(value.mileage&&Number(value.mileage)>2_147_483_647)ctx.addIssue({code:'custom',path:['mileage'],message:'Enter a valid mileage.'});
   if(value.last_confirmed_at&&Number.isNaN(Date.parse(value.last_confirmed_at)))ctx.addIssue({code:'custom',path:['last_confirmed_at'],message:'Choose a valid confirmation date.'});
 });

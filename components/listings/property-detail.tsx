@@ -3,17 +3,16 @@ import Link from 'next/link';
 import {formatPrice} from '@/lib/domain/money';
 import {resolveFees,type FeeRow} from '@/lib/domain/fees';
 import {freshness} from '@/lib/domain/freshness';
-import {buildWhatsAppUrl,listingMessage} from '@/lib/domain/whatsapp';
+import {listingMessage} from '@/lib/domain/whatsapp';
 import {formatNaira} from '@/lib/domain/money';
 import type {Listing,ListingFee} from '@/lib/types';
 import {submitListingReport} from '@/app/actions';
-import {ContactEventLink} from '@/components/contact-event-link';
-import {normalizePhone} from '@/lib/domain/phone';
+import {BusinessContactOptions} from '@/components/business-contact-options';
 import {headers} from 'next/headers';
 import {listingStructuredData} from '@/lib/domain/seo';
 import {SeoJsonLd} from '@/components/seo-jsonld';
 
-export async function PropertyDetail({listing,canonicalUrl,brand,whatsapp,phone,safetyTips}:{listing:Listing;canonicalUrl:string;brand:string;whatsapp:string|null;phone:string|null;safetyTips:string[]}){
+export async function PropertyDetail({listing,canonicalUrl,brand,safetyTips}:{listing:Listing;canonicalUrl:string;brand:string;safetyTips:string[]}){
  const requestHeaders=await headers();const jsonLd=listingStructuredData(listing,canonicalUrl,brand);
  const images=[...(listing.listing_images??[])].sort((a,b)=>a.sort_order-b.sort_order);const details=listing.property_details;const amenities=details?.amenities??[];
  const location=[listing.public_location_label||listing.public_location||listing.area,listing.city,listing.state].filter(Boolean).join(', ')||'Location available on request';
@@ -23,7 +22,7 @@ export async function PropertyDetail({listing,canonicalUrl,brand,whatsapp,phone,
  const fees=(listing.listing_fees??[]) as ListingFee[];
  const feeRows:FeeRow[]=fees.map(row=>({type:row.fee_type,label:row.label||undefined,state:row.state,amount:row.amount==null?undefined:Number(row.amount),percentOfRent:row.percent_of_rent==null?undefined:Number(row.percent_of_rent),frequency:row.frequency??undefined,refundable:row.refundable??undefined,note:row.note??undefined}));
  const feeResult=resolveFees(listing.price_amount==null?null:{amount:Number(listing.price_amount),period:period==='month'?'month':'year',advanceMonths:details?.advance_rent_months??undefined},feeRows);
- const message=listingMessage({brand,title:listing.title,ref:listing.reference_code,area:listing.area,city:listing.city,priceText:price,url:canonicalUrl});const whatsappUrl=buildWhatsAppUrl({businessNumber:whatsapp,message});const phoneDigits=normalizePhone(phone||'');
+ const message=listingMessage({brand,title:listing.title,ref:listing.reference_code,area:listing.area,city:listing.city,priceText:price,url:canonicalUrl});
  return <article className="wrap detail">{!listing.is_demo&&<SeoJsonLd data={jsonLd} nonce={requestHeaders.get('x-nonce')||''}/>}
   <nav aria-label="Breadcrumb" className="breadcrumbs"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href={`/property-for-${listing.purpose==='short_let'?'short-let':listing.purpose}`}>{listing.purpose.replace('_',' ')}</Link><span aria-hidden="true">/</span><span>{listing.reference_code}</span></nav>
   <p className="eyebrow">Reference {listing.reference_code} · {listing.purpose.replace('_',' ')}</p>
@@ -41,6 +40,6 @@ export async function PropertyDetail({listing,canonicalUrl,brand,whatsapp,phone,
    <p className="muted">Listing information is supplied by the realtor and has not been independently verified.</p>
    <details className="safety-tips"><summary>Safety tips before you proceed</summary><ul>{(safetyTips.length?safetyTips:['View the property in person before paying.','Verify ownership or the realtor’s authority and review relevant documents.','Confirm all fees and payment instructions directly with the realtor.']).map((tip,index)=><li key={index}>{tip}</li>)}</ul></details></>}
    {active&&<details><summary>Report this listing or ask if it is still available</summary><form action={submitListingReport} className="form-stack"><input type="hidden" name="listing_reference" value={listing.reference_code}/><input type="hidden" name="listing_slug" value={new URL(canonicalUrl).pathname.split('/').pop()}/><label>Reason<select name="reason" required><option value="no_longer_available">No longer available</option><option value="incorrect_info">Incorrect information</option><option value="suspected_fraud">Suspected fraud</option><option value="marketed_without_consent">Marketed without consent</option><option value="offensive_content">Offensive content</option><option value="other">Other</option></select></label><label>Details (optional)<textarea name="details" maxLength={500}/></label><label className="honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off"/></label><button className="button button-secondary">Send report</button></form></details>}
-  </div><aside className="contact-card"><p className="eyebrow">{listing.is_demo?'Demonstration listing':'Ask about this listing'}</p><h2>{brand}</h2><p>Reference <strong>{listing.reference_code}</strong></p>{listing.is_demo?<p className="notice">Fictional sample only. No availability or enquiries for this demo.</p>:active&&whatsappUrl?<ContactEventLink className="button" href={whatsappUrl} reference={listing.reference_code} event="whatsapp_click" target="_blank" rel="noopener noreferrer">WhatsApp ↗</ContactEventLink>:<p className="notice">{active?'WhatsApp is not configured yet.':'Contact the realtor for similar listings.'}</p>}{active&&phoneDigits&&<ContactEventLink className="button button-secondary" href={`tel:+${phoneDigits}`} reference={listing.reference_code} event="call_click">Call the realtor</ContactEventLink>}{active&&<Link className="button button-secondary" href={`/contact?listing=${encodeURIComponent(listing.reference_code)}`}>Send an enquiry</Link>}</aside></div>
+  </div><aside className="contact-card"><p className="eyebrow">{listing.is_demo?'Demonstration listing':'Ask about this listing'}</p><h2>{brand}</h2><p>Reference <strong>{listing.reference_code}</strong></p>{listing.is_demo?<p className="notice">Fictional sample only. No availability or enquiries for this demo.</p>:<><BusinessContactOptions message={active?message:'Hello Evergreen Global Properties, I’m looking for similar properties.'} reference={active?listing.reference_code:undefined}/>{active&&<Link className="button button-secondary" href={`/contact?listing=${encodeURIComponent(listing.reference_code)}`}>Send an enquiry</Link>}</>}</aside></div>
  </article>;
 }

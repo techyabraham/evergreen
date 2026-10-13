@@ -64,6 +64,8 @@ Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. Run `n
 
 ### Latest checks
 
+- Public About/contact enhancement: use the owner-provided About copy, add both supplied contact lines as clickable call and WhatsApp links, and provide contextual WhatsApp options on listing pages plus a floating site-wide chat chooser. Add the existing toilet count to the admin editor and persist it. `npm run lint`, `npm run typecheck`, `npm run build`, and `git diff --check` all pass. Unit tests were not run.
+
 - `npm run lint`: PASS.
 - `npm run typecheck`: PASS.
 - `npm test`: PASS, 21 tests across 3 files.
