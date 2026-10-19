@@ -65,6 +65,7 @@ Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. Run `n
 ### Latest checks
 
 - Public About/contact enhancement: use the owner-provided About copy, add both supplied contact lines as clickable call and WhatsApp links, and provide contextual WhatsApp options on listing pages plus a floating site-wide chat chooser. Add the existing toilet count to the admin editor and persist it. `npm run lint`, `npm run typecheck`, `npm run build`, and `git diff --check` all pass. Unit tests were not run.
+- Progressive home loading: render the homepage shell, hero search, city navigation, and calls to action outside the slower inventory requests. Keep a listing-card skeleton inside the local Suspense boundary, and replace the generic blocking route message with a compact content skeleton. `npm run lint`, `npm run typecheck`, `npm run build`, and `git diff --check` pass; unit tests were not run.
 
 - `npm run lint`: PASS.
 - `npm run typecheck`: PASS.

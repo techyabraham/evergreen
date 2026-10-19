@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { getListings, getPublicSettings } from '@/lib/data';
 import { ListingCard } from '@/components/listing-card';
 import type { Listing } from '@/lib/types';
@@ -18,16 +19,48 @@ function PropertyCollection({ title, eyebrow, href, listings }: { title: string;
   </section>;
 }
 
-export default async function Home() {
-  const [featured, latest, byCity, settings] = await Promise.all([
+async function ShortLetIntent() {
+  const settings = await getPublicSettings();
+  if (!settings?.short_let_enabled) return null;
+  return <label><input type="radio" name="purpose" value="short_let"/><span>Short let</span></label>;
+}
+
+async function HomeListings() {
+  const [featured, latest, byCity] = await Promise.all([
     getListings({ category: 'property', featured: 'true' }, 6),
     getListings({ category: 'property' }, 6),
     Promise.all(cities.map(city => getListings({ category: 'property', city: city.name }, 3))),
-    getPublicSettings(),
   ]);
   const featuredIds = new Set(featured.map(listing => listing.id));
   const latestNotFeatured = latest.filter(listing => !featuredIds.has(listing.id));
-  const shortLetEnabled = Boolean(settings?.short_let_enabled);
+  return <>
+    <PropertyCollection title="Featured properties" eyebrow="Selected by the realtor" href="/properties?featured=true" listings={featured} />
+
+    {!latestNotFeatured.length && !featured.length ? (
+      <section className="wrap section home-collection">
+        <div className="empty-state home-empty-state">
+          <span className="empty-spark" aria-hidden="true">✳</span>
+          <p className="eyebrow">Property listings</p>
+          <h2>New homes will appear here.</h2>
+          <p>Browse by city or tell the realtor what you are looking for.</p>
+          <Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link>
+        </div>
+      </section>
+    ) : <PropertyCollection title="Recently listed" eyebrow="The latest additions" href="/properties?sort=newest" listings={latestNotFeatured} />}
+
+    {cities.map((city, index) => <PropertyCollection key={city.name} title={`Properties in ${city.name}`} eyebrow={`${city.state} · Browse by location`} href={`/properties?city=${encodeURIComponent(city.name)}`} listings={byCity[index]} />)}
+  </>;
+}
+
+function HomeListingsSkeleton() {
+  return <section className="wrap section home-listings-skeleton" aria-label="Property listings loading" aria-busy="true">
+    <div className="section-head"><div><span className="skeleton-line skeleton-eyebrow"/><span className="skeleton-line skeleton-heading"/></div></div>
+    <div className="cards">{[0, 1, 2].map(index => <div className="listing-skeleton" key={index}><div className="skeleton-photo"/><div className="listing-skeleton-copy"><span className="skeleton-line"/><span className="skeleton-line short"/><span className="skeleton-line medium"/></div></div>)}</div>
+    <span className="visually-hidden">Loading property listings.</span>
+  </section>;
+}
+
+export default function Home() {
 
   return (
     <>
@@ -45,7 +78,7 @@ export default async function Home() {
                 <legend>What are you looking to do?</legend>
                 <label><input type="radio" name="purpose" value="rent" defaultChecked/><span>Rent</span></label>
                 <label><input type="radio" name="purpose" value="sale"/><span>Buy</span></label>
-                {shortLetEnabled&&<label><input type="radio" name="purpose" value="short_let"/><span>Short let</span></label>}
+                <Suspense fallback={null}><ShortLetIntent/></Suspense>
               </fieldset>
               <div className="home-search-fields">
                 <label className="home-search-location" htmlFor="home-search">Area, neighbourhood or keyword
@@ -99,21 +132,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <PropertyCollection title="Featured properties" eyebrow="Selected by the realtor" href="/properties?featured=true" listings={featured} />
-
-      {!latestNotFeatured.length && !featured.length ? (
-        <section className="wrap section home-collection">
-          <div className="empty-state home-empty-state">
-            <span className="empty-spark" aria-hidden="true">✳</span>
-            <p className="eyebrow">Property listings</p>
-            <h2>New homes will appear here.</h2>
-            <p>Browse by city or tell the realtor what you are looking for.</p>
-            <Link className="button" href="/request">Make a property request <span aria-hidden="true">↗</span></Link>
-          </div>
-        </section>
-      ) : <PropertyCollection title="Recently listed" eyebrow="The latest additions" href="/properties?sort=newest" listings={latestNotFeatured} />}
-
-      {cities.map((city, index) => <PropertyCollection key={city.name} title={`Properties in ${city.name}`} eyebrow={`${city.state} · Browse by location`} href={`/properties?city=${encodeURIComponent(city.name)}`} listings={byCity[index]} />)}
+      <Suspense fallback={<HomeListingsSkeleton/>}><HomeListings/></Suspense>
 
       <section className="home-bottom-cta">
         <div className="wrap home-bottom-cta-inner">

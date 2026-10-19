@@ -23,6 +23,7 @@ These defaults follow Appendix A of the execution kit. Replace them only with re
 | Admin registration | Admin-generated, single-use invitations | Open signup must never grant admin privileges; invitations are email-bound and expire after seven days. |
 | Public listing discovery | Featured listings require the realtor's featured flag; recent and city collections use published inventory | Do not label listings “popular” until there is a suitable public-safe ranking signal. Empty collections stay hidden. |
 | Mobile primary controls | Target 48 CSS px minimum for main touch controls | WCAG 2.2 AA permits 24px targets with spacing exceptions; Evergreen aims for larger touch controls on mobile. |
+| Public listing queries | Inventory can respond more slowly than static page content | Homepage hero, search, city links and calls to action render outside the inventory Suspense boundary. |
 
 ## Missing intake
 Brand/logo, realtor name and portrait, verified email, specific coverage locations within the stated cities, fee policy, approved safety tips, privacy contact/legal copy, real listing data/photos, hosting owner, and notification recipient are not supplied. These remain settings or launch tasks. The owner supplied the public call/WhatsApp lines 07086659178 and 07032487829 for display on the site. Demo records are not a substitute for approved real inventory.

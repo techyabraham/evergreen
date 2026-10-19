@@ -309,3 +309,24 @@ body{background:#fafaf6;color:var(--ink);font-size:15px;line-height:1.6}
 @media(max-width:800px){.about-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.about-contact,.contact-direct{grid-template-columns:1fr}.about-contact{gap:24px}}
 @media(max-width:560px){.about-page{padding-top:20px}.about-hero{grid-template-columns:1fr;gap:22px;min-height:0;padding:28px 22px;border-radius:14px}.about-page h1{font-size:clamp(42px,12vw,58px)}.about-lead{font-size:15px}.about-hero-note{padding:19px}.about-hero-note p{margin:14px 0;font-size:19px}.about-services{padding:52px 0 43px}.about-service-grid{gap:9px}.about-service-card{min-height:170px;padding:16px}.about-service-card h3{margin-top:20px;font-size:18px}.about-values{grid-template-columns:1fr;gap:12px;padding:27px 0}.about-values p:last-child,.about-contact>div>p:last-child{font-size:13px}.about-contact{gap:20px;margin:42px 0 24px;padding:22px 17px}.about-contact h2{font-size:31px}.about-signoff{font-size:16px}.contact-direct{gap:17px;margin:24px 0;padding:19px 15px}.contact-direct .business-contact-option,.about-contact .business-contact-option{grid-template-columns:minmax(0,1fr) auto}.footer-contact{width:100%}.site-footer .footer-links{gap:16px}.whatsapp-live-chat{right:13px;bottom:13px}.whatsapp-live-chat>summary{min-height:48px;padding:0 15px;font-size:12px}}
 @media(max-width:360px){.business-contact-option{grid-template-columns:1fr}.business-contact-call{flex-direction:row;justify-content:space-between;align-items:center}.business-contact-whatsapp{min-height:44px}.whatsapp-live-chat>summary{min-height:46px;padding:0 12px}}
+
+/* Progressive listing loads: keep the page frame and primary navigation visible. */
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.home-listings-skeleton{min-height:360px}
+.skeleton-line{display:block;height:13px;border-radius:99px;background:linear-gradient(90deg,#e8ece5 25%,#f2f4ef 45%,#e8ece5 65%);background-size:220% 100%;animation:listing-skeleton-shimmer 1.5s ease-in-out infinite}
+.skeleton-eyebrow{width:108px;height:9px;margin-bottom:10px}
+.skeleton-heading{width:min(310px,70vw);height:31px}
+.skeleton-title{width:min(360px,78vw);height:40px;margin:7px 0 15px}
+.skeleton-copy{width:min(500px,85vw);height:12px}
+.home-listings-skeleton .section-head{margin-bottom:18px}
+.listing-skeleton{min-width:0;overflow:hidden;border:1px solid #e3e9e1;border-radius:12px;background:#fff}
+.skeleton-photo{aspect-ratio:1.5;background:linear-gradient(110deg,#e7ebe4 8%,#f0f2ed 18%,#e7ebe4 33%);background-size:220% 100%;animation:listing-skeleton-shimmer 1.5s ease-in-out infinite}
+.listing-skeleton-copy{display:grid;gap:10px;padding:15px}
+.listing-skeleton-copy .skeleton-line{height:12px}
+.listing-skeleton-copy .short{width:56%}
+.listing-skeleton-copy .medium{width:78%}
+.route-loading{min-height:62vh;padding-top:clamp(45px,9vw,100px);padding-bottom:60px}
+.route-loading-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:40px}
+@keyframes listing-skeleton-shimmer{to{background-position-x:-220%}}
+@media(max-width:700px){.home-listings-skeleton{min-height:310px}.route-loading{min-height:55vh;padding-top:48px}.route-loading-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:26px}.route-loading-cards .listing-skeleton:last-child{display:none}.skeleton-title{height:34px}}
+@media(prefers-reduced-motion:reduce){.skeleton-line,.skeleton-photo{animation:none}}

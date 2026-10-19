@@ -46,3 +46,6 @@ Keep the database RPC as the authority for invite validity. The registration UI 
 
 ## Public About and contact presentation
 Use the owner-provided About copy as the page's core message, with clear visual sections for services, values, and a direct-contact close. Display the owner-provided Nigerian contact lines `07086659178` and `07032487829` as tap-to-call links and WhatsApp chat links in the About page, contact page, footer, and listing enquiry cards. Use `+234` E.164 links for calling and WhatsApp's country-code format for `wa.me`. The floating WhatsApp control offers both lines and is hidden in admin routes. It opens WhatsApp; it does not claim an agent is online. Demo listings keep enquiries disabled.
+
+## Progressive public listing loads
+Keep the homepage hero, search, city navigation, and follow-on actions independent of inventory queries. Load the property collections inside a local Suspense boundary with a card-shaped skeleton, so slow listing queries do not replace the public page shell. Settings-dependent short-let search intent has its own small boundary. The global route fallback should remain a lightweight content skeleton beneath the persistent app layout rather than a full-screen blocking message.
